@@ -2,7 +2,9 @@ package com.verifico.server.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,7 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.verifico.server.auth.dto.RegisterRequest;
 import com.verifico.server.user.User;
@@ -82,10 +86,30 @@ public class AuthServiceTest {
 
   @Test
   void duplicateEmail() {
+    RegisterRequest registerRequest = validRegisterRequest();
+
+    when(userRepository.findByUsername(registerRequest.getEmail())).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.of(new User()));
+
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, ()-> authService.register(registerRequest));
+
+    assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    assertEquals("Email already in use", exception.getReason());
+
+    verify(userRepository,never()).save(any());
+
   }
 
   @Test
   void duplicateUsername() {
+    RegisterRequest registerRequest = validRegisterRequest();
+
+    when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.of(new User()));
+
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, ()-> authService.register(registerRequest));
+
+    assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+    assertEquals("Username already in use", exception.getReason());
   }
 
   @Test
