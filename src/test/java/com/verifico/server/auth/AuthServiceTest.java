@@ -114,5 +114,14 @@ public class AuthServiceTest {
 
   @Test
   void checkForPassHashing() {
+    RegisterRequest registerRequest = validRegisterRequest();
+
+    when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
+    when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("hashedPass");
+
+    authService.register(registerRequest);
+
+    verify(passwordEncoder).encode("password123");
   }
 }
