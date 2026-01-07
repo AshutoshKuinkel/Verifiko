@@ -112,6 +112,8 @@ public class AuthService {
     return new LoginResponse(
         user.getId(),
         user.getUsername(),
-        user.getEmail());
+        user.getEmail(),
+        accessToken, // this cannot be sent as a json response to client in prod
+        refreshToken.getToken()); // this cannot be sent as a json response to client in prod
   }
 }

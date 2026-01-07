@@ -1,5 +1,9 @@
 package com.verifico.server.auth;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +21,10 @@ import jakarta.validation.Valid;
 public class AuthController {
 
   private final AuthService authService;
+  @Value("${JWT_EXPIRY}")
+  private int accessTokenMins;
+  @Value("${REFRESH_TOKEN_DAYS}")
+  private long RefreshTokenDays;
 
   public AuthController(AuthService authService) {
     this.authService = authService;
@@ -28,7 +36,29 @@ public class AuthController {
   };
 
   @PostMapping("/login")
-  public LoginResponse login(@Valid @RequestBody LoginRequest request){
-    return authService.login(request);
+  public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
+
+    LoginResponse response = authService.login(request);
+
+    ResponseCookie accessCookie = ResponseCookie.from("access_token", response.getAccessToken())
+        .httpOnly(true)
+        .secure(true)
+        .sameSite("Strict")
+        .path("/")
+        .maxAge(accessTokenMins * 60)
+        .build();
+
+    ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+        .httpOnly(true)
+        .secure(true)
+        .sameSite("Strict")
+        .path("/auth/refresh")
+        .maxAge(RefreshTokenDays * 24 * 60 * 60)
+        .build();
+
+        return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE,accessCookie.toString())
+        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .build();
   }
 }
