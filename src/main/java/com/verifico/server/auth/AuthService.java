@@ -1,6 +1,7 @@
 package com.verifico.server.auth;
 
 import java.time.Instant;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,6 +19,9 @@ import com.verifico.server.auth.dto.LoginResponse;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
 import com.verifico.server.user.dto.UserResponse;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.util.StringUtils;
 
@@ -152,6 +156,25 @@ public class AuthService {
 
     return new LoginResponse(user.getId(), user.getUsername(), user.getEmail(), newAccessToken,
         newRefreshToken.getToken());
+
+  }
+
+  public void logout(HttpServletRequest request){
+    // clear refresh token + access token if user goes to logout endpoint {this is handeled in controller logic}
+    // also revoke all db refresh tokens for that user...
+
+    if (request.getCookies() == null) return;
+
+    String refreshToken = Arrays.stream(request.getCookies())
+    .filter(c->"refresh_token".equals(c.getName()))
+    .findFirst()
+    .map(Cookie::getValue)
+    .orElse(null);
+
+    if(refreshToken !=null){
+      refreshTokenService.revokeByToken(refreshToken);
+    }
+
 
   }
 }

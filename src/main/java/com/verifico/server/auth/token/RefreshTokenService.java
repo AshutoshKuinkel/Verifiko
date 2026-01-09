@@ -87,4 +87,13 @@ public class RefreshTokenService {
           refreshTokenRepository.save(token);
         });
   }
+
+  @Transactional
+  public void revokeByToken(String request){
+    refreshTokenRepository.findByToken(request)
+    .ifPresent(token -> {
+      token.setRevoked(true);
+      refreshTokenRepository.save(token);
+    });
+  }
 }

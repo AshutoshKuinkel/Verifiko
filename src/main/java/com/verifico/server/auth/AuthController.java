@@ -100,4 +100,33 @@ public class AuthController {
         .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
         .build();
   }
+
+  @PostMapping("/logout")
+  public ResponseEntity<?> logout(HttpServletRequest request) {
+
+    authService.logout(request);
+
+    ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
+        .httpOnly(true)
+        .secure(true)
+        .sameSite("Strict")
+        .path("/")
+        .maxAge(0)
+        .build();
+
+    ResponseCookie refreshCookie = ResponseCookie.from(
+        "refresh_token",
+        "")
+        .httpOnly(true)
+        .secure(true)
+        .sameSite("Strict")
+        .path("/api/auth/refresh")
+        .maxAge(0)
+        .build();
+
+        return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .build();
+  }
 }
