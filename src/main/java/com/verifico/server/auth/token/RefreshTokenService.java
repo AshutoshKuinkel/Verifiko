@@ -28,12 +28,10 @@ public class RefreshTokenService {
   @Transactional
   // create token
   public RefreshToken createToken(User user) {
-    // revoking the current refresh token for that user if there is one:
-    refreshTokenRepository.findByUser_Username(user.getUsername())
-        .forEach(token -> {
-          token.setRevoked(true);
-          refreshTokenRepository.save(token);
-        });
+    // deleting the current refresh token for that user if there is one:
+    refreshTokenRepository.deleteByUserId(user.getId());
+    refreshTokenRepository.flush();
+        
 
     RefreshToken refreshToken = new RefreshToken();
     refreshToken.setUser(user);
