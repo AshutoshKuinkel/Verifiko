@@ -80,7 +80,8 @@ public class Post {
   private String liveDemoUrl;
 
   // set default to false,
-  private boolean isBoosted;
+  @Column(nullable = false)
+  private boolean isBoosted = false;
 
   // maybe make it so that the longer you want to boost your post, the more
   // credits it costs
@@ -91,7 +92,7 @@ public class Post {
   private Instant createdAt;
 
   @LastModifiedDate
-  @Column(nullable = false, updatable = true)
+  @Column(nullable = false)
   private Instant updatedAt;
 
 }
