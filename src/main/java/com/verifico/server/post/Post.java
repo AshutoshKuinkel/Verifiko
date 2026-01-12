@@ -28,10 +28,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-enum Stage {
-
-}
-
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "posts")

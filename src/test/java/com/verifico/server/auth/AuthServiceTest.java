@@ -16,7 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.verifico.server.auth.dto.RegisterRequest;
@@ -32,7 +32,7 @@ public class AuthServiceTest {
   UserRepository userRepository;
 
   @Mock
-  PasswordEncoder passwordEncoder;
+  BCryptPasswordEncoder passwordEncoder;
 
   @InjectMocks
   AuthService authService;
@@ -88,15 +88,16 @@ public class AuthServiceTest {
   void duplicateEmail() {
     RegisterRequest registerRequest = validRegisterRequest();
 
-    when(userRepository.findByUsername(registerRequest.getEmail())).thenReturn(Optional.empty());
+    when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.empty());
     when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.of(new User()));
 
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, ()-> authService.register(registerRequest));
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        () -> authService.register(registerRequest));
 
     assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
     assertEquals("Email already in use", exception.getReason());
 
-    verify(userRepository,never()).save(any());
+    verify(userRepository, never()).save(any());
 
   }
 
@@ -106,7 +107,8 @@ public class AuthServiceTest {
 
     when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.of(new User()));
 
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, ()-> authService.register(registerRequest));
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        () -> authService.register(registerRequest));
 
     assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
     assertEquals("Username already in use", exception.getReason());
@@ -119,6 +121,18 @@ public class AuthServiceTest {
     when(userRepository.findByUsername(registerRequest.getUsername())).thenReturn(Optional.empty());
     when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
     when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("hashedPass");
+
+    User savedUser = new User();
+    savedUser.setId(1L);
+    savedUser.setUsername(registerRequest.getUsername());
+    savedUser.setFirstName(registerRequest.getFirstName());
+    savedUser.setLastName(registerRequest.getLastName());
+    savedUser.setEmail(registerRequest.getEmail());
+    savedUser.setPassword("hashedPass");
+    savedUser.setBio(registerRequest.getBio());
+    savedUser.setAvatarUrl(registerRequest.getAvatarUrl());
+
+    when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
     authService.register(registerRequest);
 
