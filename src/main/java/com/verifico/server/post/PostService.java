@@ -1,17 +1,72 @@
 package com.verifico.server.post;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.verifico.server.post.dto.PostResponse;
+import com.verifico.server.user.User;
+import com.verifico.server.user.UserRepository;
 import com.verifico.server.post.dto.PostRequest;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class PostService {
-  
+  private final UserRepository userRepository;
+  private final PostRepository postRepository;
+
+  public PostService(UserRepository userRepository, PostRepository postRepository) {
+    this.userRepository = userRepository;
+    this.postRepository = postRepository;
+  }
+
   @Transactional
-  public PostResponse createPost(PostRequest request){
-    
+  public PostResponse createPost(PostRequest request) {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String username = auth.getName();
+
+    User author = userRepository.findByUsername(username)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unable to get username"));
+
+    Post post = new Post();
+    post.setAuthor(author);
+    post.setTitle(request.getTitle());
+    post.setTagline(request.getTagline());
+    post.setCategory(request.getCategory());
+    post.setStage(request.getStage());
+    post.setProblemDescription(request.getProblemDescription());
+    post.setSolutionDescription(request.getSolutionDescription());
+
+    if (request.getScreenshotUrls() != null) {
+      post.setScreenshotUrls(request.getScreenshotUrls());
+    }
+    if (request.getLiveDemoUrl() != null) {
+      post.setLiveDemoUrl(request.getLiveDemoUrl());
+    }
+
+    Post savedPost = postRepository.save(post);
+
+    // I need to have a field called totalPosts for user profile info, and then
+    // increment it here whenever user makes a post
+    userRepository.save(author);
+
+    return new PostResponse(
+        savedPost.getId(),
+        savedPost.getAuthor(),
+        savedPost.getTitle(),
+        savedPost.getTagline(),
+        savedPost.getCategory(),
+        savedPost.getStage(),
+        savedPost.getProblemDescription(),
+        savedPost.getSolutionDescription(),
+        savedPost.getScreenshotUrls(),
+        savedPost.getLiveDemoUrl(),
+        savedPost.isBoosted(),
+        savedPost.getBoostedUntil(),
+        savedPost.getCreatedAt(),
+        savedPost.getUpdatedAt());
   }
 }

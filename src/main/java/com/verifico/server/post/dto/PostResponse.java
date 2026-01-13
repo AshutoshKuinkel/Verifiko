@@ -3,8 +3,8 @@ package com.verifico.server.post.dto;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale.Category;
 
+import com.verifico.server.post.Category;
 import com.verifico.server.post.Stage;
 import com.verifico.server.user.User;
 
