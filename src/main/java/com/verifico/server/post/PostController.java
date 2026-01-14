@@ -2,6 +2,8 @@ package com.verifico.server.post;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,14 @@ public class PostController {
 
     return ResponseEntity.status(HttpStatus.CREATED.value())
         .body(new APIResponse<>("Post sucessfully created!", post));
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<APIResponse<PostResponse>> getPostById(@PathVariable("id") Long id) {
+    PostResponse post = postService.getPostById(id);
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(new APIResponse<>("Successfully fetched post", post));
   }
 
 }

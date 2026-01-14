@@ -1,5 +1,6 @@
 package com.verifico.server.post;
 
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -70,7 +71,25 @@ public class PostService {
         savedPost.getUpdatedAt());
   }
 
-  public  void getPostById(){
-    
+  public PostResponse getPostById(Long id) {
+    Post post = postRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+    return new PostResponse(
+        post.getId(),
+        post.getAuthor(),
+        post.getTitle(),
+        post.getTagline(),
+        post.getCategory(),
+        post.getStage(),
+        post.getProblemDescription(),
+        post.getSolutionDescription(),
+        post.getScreenshotUrls(),
+        post.getLiveDemoUrl(),
+        post.isBoosted(),
+        post.getBoostedUntil(),
+        post.getCreatedAt(),
+        post.getUpdatedAt());
+
   }
 }
