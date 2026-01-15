@@ -29,4 +29,15 @@ public enum Category {
   public String getDisplayName() {
     return displayname;
   }
+
+  public static Category findByCategoryName(String name) {
+    Category result = null;
+    for (Category category : values()) {
+      if (category.name().equalsIgnoreCase(name)) {
+        result = category;
+        break;
+      }
+    }
+    return result;
+  }
 }

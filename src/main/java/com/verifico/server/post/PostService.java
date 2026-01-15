@@ -65,10 +65,16 @@ public class PostService {
 
   }
 
-  public Page<PostResponse> getAllPosts(int page, int size) {
+  public Page<PostResponse> getAllPosts(int page, int size, Category category) {
     Pageable pageable = PageRequest.of(page, size);
-
-    return postRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toPostResponse);
+    Page<Post> posts;
+    
+    if (category != null){
+      posts = postRepository.findByCategoryOrderByCreatedAtDesc(category, pageable);
+    } else{
+      posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+    }
+    return posts.map(this::toPostResponse);
 
   }
 

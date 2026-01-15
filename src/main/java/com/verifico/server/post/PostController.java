@@ -49,7 +49,9 @@ public class PostController {
   @GetMapping("")
   public ResponseEntity<APIResponse<Page<PostResponse>>> getAllPosts(
       @RequestParam(value = "page", defaultValue = "0") int page,
-      @RequestParam(value = "size", defaultValue = "15") int size) {
+      @RequestParam(value = "size", defaultValue = "15") int size,
+      @RequestParam(value = "category",required = false) String categoryName
+    ) {
 
     if (page < 0) {
       page = 0;
@@ -59,7 +61,12 @@ public class PostController {
       size = 30;
     }
 
-    Page<PostResponse> posts = postService.getAllPosts(page, size);
+    Category category = null;
+    if(categoryName != null && !categoryName.isEmpty()){
+      category = Category.findByCategoryName(categoryName);
+    }
+
+    Page<PostResponse> posts = postService.getAllPosts(page, size,category);
 
     return ResponseEntity.ok()
         .body(new APIResponse<>("Successfully fetched all posts", posts));
