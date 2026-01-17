@@ -82,6 +82,7 @@ public class PostService {
 
   }
 
+  @Transactional
   public PostResponse updatePostServiceById(Long id, PostRequest postRequest) {
     // security check first,
     // check if the user who posted is the one trying to update the post
@@ -128,6 +129,22 @@ public class PostService {
 
     Post updatedPost = postRepository.save(post);
     return toPostResponse(updatedPost);
+  }
+
+  @Transactional
+  public void deletePostbyId(Long id) {
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String username = auth.getName();
+
+    Post post = postRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+    if (!username.equals(post.getAuthor().getUsername())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorised to make changes to this post");
+    }
+
+    postRepository.deleteById(id);
   }
 
   private PostResponse toPostResponse(Post post) {

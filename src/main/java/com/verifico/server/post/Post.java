@@ -24,6 +24,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,9 +46,11 @@ public class Post {
   private User author;
 
   @Column(nullable = false, length = 100)
+  @Pattern(regexp = "^[^<>]*$", message = "HTML tags not allowed")
   private String title;
 
   @Column(nullable = false, length = 150)
+  @Pattern(regexp = "^[^<>]*$", message = "HTML tags not allowed")
   private String tagline;
 
   // add category enum enum: AI, SAAS, FINTECH, HEALTHCARE etc...

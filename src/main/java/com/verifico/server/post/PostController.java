@@ -3,6 +3,7 @@ package com.verifico.server.post;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,7 +55,7 @@ public class PostController {
       @RequestParam(value = "category", required = false) String categoryName,
       @RequestParam(value = "search", required = false) String search) {
 
-    if (page < 0) {
+    if (page < 0 || page > 20) {
       page = 0;
     }
 
@@ -81,6 +82,14 @@ public class PostController {
 
     return ResponseEntity.ok()
         .body(new APIResponse<>("Successfully updated posting", post));
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deletePost(@PathVariable("id") Long id) {
+
+    postService.deletePostbyId(id);
+
+    return ResponseEntity.noContent().build();
   }
 
 }
