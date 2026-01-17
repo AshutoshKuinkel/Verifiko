@@ -13,6 +13,7 @@ import com.verifico.server.post.dto.PostResponse;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
 import com.verifico.server.user.dto.AuthorResponse;
+import com.verifico.server.post.dao.PostSearchDao;
 import com.verifico.server.post.dto.PostRequest;
 
 import jakarta.transaction.Transactional;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class PostService {
   private final UserRepository userRepository;
   private final PostRepository postRepository;
+  private final PostSearchDao postSearchDao;
 
   @Transactional
   public PostResponse createPost(PostRequest request) {
@@ -65,13 +67,15 @@ public class PostService {
 
   }
 
-  public Page<PostResponse> getAllPosts(int page, int size, Category category) {
+  public Page<PostResponse> getAllPosts(int page, int size, Category category, String search) {
     Pageable pageable = PageRequest.of(page, size);
     Page<Post> posts;
-    
-    if (category != null){
+
+    if (category != null) {
       posts = postRepository.findByCategoryOrderByCreatedAtDesc(category, pageable);
-    } else{
+    } else if (search != null) {
+      posts = postSearchDao.searchPosts(search, pageable);
+    } else {
       posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
     return posts.map(this::toPostResponse);

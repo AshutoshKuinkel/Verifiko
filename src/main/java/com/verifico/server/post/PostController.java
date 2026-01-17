@@ -50,7 +50,8 @@ public class PostController {
   public ResponseEntity<APIResponse<Page<PostResponse>>> getAllPosts(
       @RequestParam(value = "page", defaultValue = "0") int page,
       @RequestParam(value = "size", defaultValue = "15") int size,
-      @RequestParam(value = "category",required = false) String categoryName
+      @RequestParam(value = "category",required = false) String categoryName,
+      @RequestParam(value = "search", required = false) String search
     ) {
 
     if (page < 0) {
@@ -66,7 +67,7 @@ public class PostController {
       category = Category.findByCategoryName(categoryName);
     }
 
-    Page<PostResponse> posts = postService.getAllPosts(page, size,category);
+    Page<PostResponse> posts = postService.getAllPosts(page, size,category,search);
 
     return ResponseEntity.ok()
         .body(new APIResponse<>("Successfully fetched all posts", posts));
