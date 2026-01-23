@@ -38,7 +38,7 @@ public class CommentService {
 
     // is person trying to comment authenticated?
     User author = userRepository.findByUsername(username).orElseThrow(
-        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please login before making comments!"));
+        () -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User data inconsistency detected"));
 
     Comment comment = new Comment();
     comment.setPost(post);
