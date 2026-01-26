@@ -1,7 +1,8 @@
 package com.verifico.server.comment;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,17 +52,16 @@ public class CommentService {
     return toCommentResponse(savedComment);
   }
 
-  public List<CommentResponse> getAllCommentsForPost(Long id) {
+  public Page<CommentResponse> getAllCommentsForPost(Long id, int page, int size) {
     // check post exists:
     postRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
+    Pageable pageable = PageRequest.of(page, size);
     // find all comments by post id {raw response}:
-    List<Comment> allComments = commentRepository.findAllByPostIdOrderByCreatedAtDesc(id);
+    Page<Comment> allComments = commentRepository.findAllByPostIdOrderByCreatedAtDesc(id, pageable);
 
-    return allComments.stream()
-        .map(this::toCommentResponse)
-        .toList();
+    return allComments.map(this::toCommentResponse);
   }
 
   @Transactional
