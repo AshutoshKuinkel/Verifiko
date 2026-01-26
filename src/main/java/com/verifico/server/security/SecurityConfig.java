@@ -44,8 +44,9 @@ public class SecurityConfig {
             (requests) -> requests
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout")
                 .permitAll()
-                .requestMatchers(HttpMethod.GET, "/","/api/posts").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/post/create").authenticated()
+                .requestMatchers(HttpMethod.GET, "/", "/api/posts", "/api/posts/{id}/comments").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/post/create", "/api/posts/{id}/comments").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/comments/{id}").authenticated()
                 .anyRequest().authenticated());
     return http.build();
   }
