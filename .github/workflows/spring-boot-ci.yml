@@ -1,4 +1,4 @@
-name: SPRING BOOT CI PIPELINE 🍃
+name: CI
 
 on:
   push:
@@ -47,6 +47,9 @@ jobs:
           distribution: "temurin"
           java-version: "17"
           cache: maven
+
+      - name: Compile project
+        run: mvn -B clean verify
 
       # code quality
       - name: SonarCloud Scan
