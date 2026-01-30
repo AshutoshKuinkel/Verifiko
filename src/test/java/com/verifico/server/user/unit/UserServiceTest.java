@@ -122,4 +122,48 @@ class UserServiceTest {
     assertEquals(user.getFirstName(), response.firstName());
     assertEquals(user.getLastName(), response.LastName());
   }
+
+  // update profile endpoint tests:
+  // 1. unauthenticated user
+
+  // 2. user not found in db
+
+  // 3. email already in use
+
+  // 4. username already in use
+
+  // 5. avatar url not starting with https://
+  // long avatar url
+
+  // 6. successfull partial update
+
+  // 7. given email is same as current email (make sure this don't hit db)
+
+  // 8. given username is the same as current username (make sure this don't hit db)
+
+  // 9. Blank email→ no update to email, no uniqueness check (make sure this don't
+  // hit db)
+
+  // 10. blank username, no update to username, no uniqueness check (make sure this
+  // don't hit db)
+
+  // 11. First name / last name blank → no update (make sure this
+  // don't hit db)
+
+  // 12. Bio provided as blank or only whitespace → bio is set to ""
+
+  // 13. Bio provided with value (including leading/trailing spaces) → bio is trimmed
+  // and updated
+
+  // 14. Multiple fields updated successfully in one request (e.g. firstName + bio +
+  // avatarUrl)
+
+  // 15. No fields provided at all (all null or blank) → no changes, but save is still
+  // called (no-op update)
+
+  // 16. Email provided with leading/trailing spaces → email is trimmed and lowercased
+  // correctly
+
+  // 17. Username provided with leading/trailing spaces → username is trimmed but case
+  // preserved
 }
