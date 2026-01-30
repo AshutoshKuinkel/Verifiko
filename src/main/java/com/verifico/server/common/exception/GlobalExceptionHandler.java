@@ -2,6 +2,7 @@ package com.verifico.server.common.exception;
 
 import java.time.LocalDateTime;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -65,4 +66,16 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+      DataIntegrityViolationException ex) {
+
+    ErrorResponse errorResponse = new ErrorResponse(
+        LocalDateTime.now(),
+        HttpStatus.CONFLICT.value(),
+        "Conflict",
+        "Resource already exists");
+
+    return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+  }
 }

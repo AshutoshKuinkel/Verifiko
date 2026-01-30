@@ -3,15 +3,18 @@ package com.verifico.server.user;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.verifico.server.common.dto.APIResponse;
+import com.verifico.server.user.dto.ProfileRequest;
 import com.verifico.server.user.dto.PublicUserResponse;
 import com.verifico.server.user.dto.UserResponse;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 
@@ -45,9 +48,12 @@ public class UserController {
         .body(new APIResponse<>("Successfully Fetched User Profile", response));
   }
 
-  @PutMapping("/me")
-  public void updateMyProfile() {
-    // do this after the get api/users/userId
+  @PatchMapping("/me")
+  public ResponseEntity<APIResponse<UserResponse>> updateMyProfile(@Valid @RequestBody ProfileRequest request) {
+    UserResponse updatedUser = userService.updateMyProfile(request);
+
+    return ResponseEntity.ok()
+        .body(new APIResponse<>("Profile successfully updated", updatedUser));
   }
 
 }
