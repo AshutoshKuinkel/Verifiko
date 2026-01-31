@@ -45,7 +45,7 @@ public class CommentService {
 
     Comment comment = new Comment();
     comment.setPost(post);
-    comment.setContent(request.getContent());
+    comment.setContent(request.getContent().strip());
     comment.setAuthor(author);
 
     Comment savedComment = commentRepository.save(comment);

@@ -36,12 +36,12 @@ public class PostService {
 
     Post post = new Post();
     post.setAuthor(author);
-    post.setTitle(request.getTitle());
-    post.setTagline(request.getTagline());
+    post.setTitle(request.getTitle().strip());
+    post.setTagline(request.getTagline().strip());
     post.setCategory(request.getCategory());
     post.setStage(request.getStage());
-    post.setProblemDescription(request.getProblemDescription());
-    post.setSolutionDescription(request.getSolutionDescription());
+    post.setProblemDescription(request.getProblemDescription().strip());
+    post.setSolutionDescription(request.getSolutionDescription().strip());
 
     if (request.getScreenshotUrls() != null) {
       post.setScreenshotUrls(request.getScreenshotUrls());
@@ -73,7 +73,7 @@ public class PostService {
 
     if (category != null) {
       posts = postRepository.findByCategoryOrderByCreatedAtDesc(category, pageable);
-    } else if (search != null) {
+    } else if (search != null && !search.isBlank()) {
       posts = postSearchDao.searchPosts(search, pageable);
     } else {
       posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
@@ -103,10 +103,18 @@ public class PostService {
     // just save that, but if the field isn't eneterd i.e null then we keep
     // our original values
     if (postRequest.getTitle() != null) {
-      post.setTitle(postRequest.getTitle());
+      String title = postRequest.getTitle().strip();
+      if (title.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title cannot be blank");
+      }
+      post.setTitle(title);
     }
     if (postRequest.getTagline() != null) {
-      post.setTagline(postRequest.getTagline());
+      String tagline = postRequest.getTagline().strip();
+      if (tagline.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tagline cannot be blank");
+      }
+      post.setTagline(tagline);
     }
     if (postRequest.getCategory() != null) {
       post.setCategory(postRequest.getCategory());
@@ -115,16 +123,29 @@ public class PostService {
       post.setStage(postRequest.getStage());
     }
     if (postRequest.getProblemDescription() != null) {
-      post.setProblemDescription(postRequest.getProblemDescription());
+      String desc = postRequest.getProblemDescription().strip();
+      if (desc.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Problem Description cannot be blank");
+      }
+      post.setProblemDescription(desc);
     }
     if (postRequest.getSolutionDescription() != null) {
-      post.setSolutionDescription(postRequest.getSolutionDescription());
+      String desc = postRequest.getSolutionDescription().strip();
+      if (desc.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solution Description cannot be blank");
+      }
+      post.setSolutionDescription(desc);
     }
     if (postRequest.getScreenshotUrls() != null) {
-      post.setScreenshotUrls(postRequest.getScreenshotUrls());
+      post.setScreenshotUrls(
+          postRequest.getScreenshotUrls()
+              .stream()
+              .filter(url -> url != null && !url.strip().isEmpty())
+              .map(String::strip)
+              .toList());
     }
     if (postRequest.getLiveDemoUrl() != null) {
-      post.setLiveDemoUrl(postRequest.getLiveDemoUrl());
+      post.setLiveDemoUrl(postRequest.getLiveDemoUrl().strip());
     }
 
     Post updatedPost = postRepository.save(post);

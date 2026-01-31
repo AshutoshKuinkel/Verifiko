@@ -49,10 +49,10 @@ public class AuthService {
 
   @Transactional
   public UserResponse register(RegisterRequest request) {
-    String username = StringUtils.trimWhitespace(request.getUsername());
-    String email = StringUtils.trimWhitespace(request.getEmail()).toLowerCase();
-    String firstName = StringUtils.trimWhitespace(request.getFirstName());
-    String lastName = StringUtils.trimWhitespace(request.getLastName());
+    String username = request.getUsername().strip();
+    String email = request.getEmail().strip().toLowerCase();
+    String firstName = request.getFirstName().strip();
+    String lastName = request.getLastName().strip();
 
     if (userRepository.findByUsername(username).isPresent()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already in use");
@@ -159,22 +159,23 @@ public class AuthService {
 
   }
 
-  public void logout(HttpServletRequest request){
-    // clear refresh token + access token if user goes to logout endpoint {this is handeled in controller logic}
+  public void logout(HttpServletRequest request) {
+    // clear refresh token + access token if user goes to logout endpoint {this is
+    // handeled in controller logic}
     // also revoke all db refresh tokens for that user...
 
-    if (request.getCookies() == null) return;
+    if (request.getCookies() == null)
+      return;
 
     String refreshToken = Arrays.stream(request.getCookies())
-    .filter(c->"refresh_token".equals(c.getName()))
-    .findFirst()
-    .map(Cookie::getValue)
-    .orElse(null);
+        .filter(c -> "refresh_token".equals(c.getName()))
+        .findFirst()
+        .map(Cookie::getValue)
+        .orElse(null);
 
-    if(refreshToken !=null){
+    if (refreshToken != null) {
       refreshTokenService.revokeByToken(refreshToken);
     }
-
 
   }
 }
