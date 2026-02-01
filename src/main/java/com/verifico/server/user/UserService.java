@@ -3,11 +3,14 @@ package com.verifico.server.user;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.verifico.server.auth.token.RefreshTokenRepository;
 import com.verifico.server.user.dto.ProfileRequest;
 import com.verifico.server.user.dto.PublicUserResponse;
+import com.verifico.server.user.dto.UpdatePasswordRequest;
 import com.verifico.server.user.dto.UserResponse;
 
 import jakarta.transaction.Transactional;
@@ -18,6 +21,10 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
   private final UserRepository userRepository;
+
+  private final PasswordEncoder passwordEncoder;
+
+  private final RefreshTokenRepository refreshTokenRepository;
 
   public UserResponse meEndpoint() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -94,6 +101,44 @@ public class UserService {
     User updatedUser = userRepository.save(user);
     return toUserResponse(updatedUser);
 
+  }
+
+  @Transactional
+  public void updatePassword(UpdatePasswordRequest request) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found!");
+    }
+
+    String username = authentication.getName();
+
+    User user = userRepository.findByUsername(username).orElseThrow(
+        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "A user with that associated id couldn't be found"));
+
+    // check old pass matches user password
+    if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect Current Password");
+    }
+
+    // check new pass doesn't equal the old pass
+    if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be the same as old password");
+    }
+
+    // check that the new pass and confirm pass match
+    if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "Confirm password and New password fields do not match");
+    }
+
+    // hash new pass
+    user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+    // save
+    userRepository.save(user);
+
+    // invalidating all refresh tokens so user has to login again
+    refreshTokenRepository.deleteByUserId(user.getId());
   }
 
   public UserResponse toUserResponse(User user) {
