@@ -3,6 +3,7 @@ package com.verifico.server.user.unit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,13 +23,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.verifico.server.auth.token.RefreshTokenRepository;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
 import com.verifico.server.user.UserService;
 import com.verifico.server.user.dto.ProfileRequest;
 import com.verifico.server.user.dto.PublicUserResponse;
+import com.verifico.server.user.dto.UpdatePasswordRequest;
 import com.verifico.server.user.dto.UserResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +45,12 @@ class UserServiceTest {
 
   @Mock
   Authentication authentication;
+
+  @Mock
+  PasswordEncoder passwordEncoder;
+
+  @Mock
+  RefreshTokenRepository refreshTokenRepository;
 
   @InjectMocks
   UserService userService;
@@ -352,4 +363,160 @@ class UserServiceTest {
     verify(userRepository, times(1)).save(any());
   }
 
+  // update user pass endpoints test
+  // 1. unauthenticated user trying to update pass
+  @Test
+  void unauthenticatedUserTryingToUpdatePassword() {
+    when(securityContext.getAuthentication()).thenReturn(null);
+
+    UpdatePasswordRequest request = new UpdatePasswordRequest();
+    request.setOldPassword("oldPass");
+    request.setNewPassword("newpass");
+    request.setConfirmNewPassword("newpass");
+
+    ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        () -> userService.updatePassword(request));
+
+    assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    assertEquals("Authenticated user not found!", ex.getReason());
+
+    verify(userRepository, never()).save(any());
+  }
+
+  // 2. user not found on db
+  @Test
+  void userNotFoundinDBWhenTryingToUpdatePassword() {
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getName()).thenReturn("JohnDoe123");
+
+    when(userRepository.findByUsername("JohnDoe123")).thenReturn(Optional.empty());
+
+    UpdatePasswordRequest request = new UpdatePasswordRequest();
+    request.setOldPassword("oldPass");
+    request.setNewPassword("newpass");
+    request.setConfirmNewPassword("newpass");
+
+    ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        () -> userService.updatePassword(request));
+
+    assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    assertEquals("A user with that associated id couldn't be found", ex.getReason());
+
+    verify(userRepository, never()).save(any());
+  }
+
+  // 3. incorrect old pass
+  @Test
+  void incorrectOldPassWhenUpdatingProfile() {
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getName()).thenReturn("JohnDoe123");
+
+    User user = mockUser();
+    user.setPassword("$2a$10$hashedPassword");
+    when(userRepository.findByUsername("JohnDoe123")).thenReturn(Optional.of(user));
+
+    when(passwordEncoder.matches("bomboclaat", user.getPassword())).thenReturn(false);
+
+    UpdatePasswordRequest request = new UpdatePasswordRequest();
+    request.setOldPassword("bomboclaat");
+    request.setNewPassword("newpass");
+    request.setConfirmNewPassword("newpass");
+
+    ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        () -> userService.updatePassword(request));
+
+    assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    assertEquals("Incorrect Current Password", ex.getReason());
+
+    verify(userRepository, never()).save(any());
+  }
+
+  // 4. new pass equals old pass edge case
+  @Test
+  void oldPassEqualsNewPassEdgeCaseWhenUpdatingPassword() {
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getName()).thenReturn("JohnDoe123");
+
+    User user = mockUser();
+    user.setPassword("$2a$10$hashedPassword");
+    when(userRepository.findByUsername("JohnDoe123")).thenReturn(Optional.of(user));
+
+    when(passwordEncoder.matches("hashedPass", user.getPassword())).thenReturn(true);
+    when(passwordEncoder.matches("hashedPass", user.getPassword())).thenReturn(true);
+
+    UpdatePasswordRequest request = new UpdatePasswordRequest();
+    request.setOldPassword("hashedPass");
+    request.setNewPassword("hashedPass");
+    request.setConfirmNewPassword("hashedPass");
+
+    ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        () -> userService.updatePassword(request));
+
+    assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    assertEquals("New password cannot be the same as old password", ex.getReason());
+
+    verify(userRepository, never()).save(any());
+  }
+
+  // 5. new pass and confirm pass mismatch
+  @Test
+  void newPassConfirmPassMismatchWhenUpdatingPassword() {
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getName()).thenReturn("JohnDoe123");
+
+    User user = mockUser();
+    user.setPassword("$2a$10$hashedPassword");
+    when(userRepository.findByUsername("JohnDoe123")).thenReturn(Optional.of(user));
+
+    when(passwordEncoder.matches("hashedPass", user.getPassword())).thenReturn(true);
+    when(passwordEncoder.matches("password123", user.getPassword())).thenReturn(false);
+
+    UpdatePasswordRequest request = new UpdatePasswordRequest();
+    request.setOldPassword("hashedPass");
+    request.setNewPassword("password123");
+    request.setConfirmNewPassword("paaaaaasssss");
+
+    ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        () -> userService.updatePassword(request));
+
+    assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    assertEquals("Confirm password and New password fields do not match", ex.getReason());
+
+    verify(userRepository, never()).save(any());
+  }
+
+  // 6. successfully updated pass
+  @Test
+  void successfullyUpdatedPassword() {
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getName()).thenReturn("JohnDoe123");
+
+    User user = mockUser();
+    user.setPassword("$2a$10$oldHashedPassword");
+    when(userRepository.findByUsername("JohnDoe123")).thenReturn(Optional.of(user));
+    when(userRepository.save(any())).thenReturn(user);
+
+    when(passwordEncoder.matches("hashedPass", user.getPassword())).thenReturn(true);
+    when(passwordEncoder.matches("password123", user.getPassword())).thenReturn(false);
+    when(passwordEncoder.encode("password123")).thenReturn("$2a$10$newHashedPassword");
+    when(passwordEncoder.matches("password123", "$2a$10$newHashedPassword")).thenReturn(true);
+
+    UpdatePasswordRequest request = new UpdatePasswordRequest();
+    request.setOldPassword("hashedPass");
+    request.setNewPassword("password123");
+    request.setConfirmNewPassword("password123");
+
+    userService.updatePassword(request);
+
+    ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+
+    verify(userRepository).save(captor.capture());
+
+    User savedUser = captor.getValue();
+
+    assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()));
+
+    verify(passwordEncoder).encode("password123");
+    verify(refreshTokenRepository, times(1)).deleteByUserId(1L);
+  }
 }
