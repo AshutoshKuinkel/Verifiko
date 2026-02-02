@@ -30,8 +30,8 @@ jobs:
       - name: Build and run tests
         run: mvn -B clean verify
 
-  code-quality:
-    name: Code Quality 🥏
+  quality-package:
+    name: Quality & Package 🥏
     runs-on: ubuntu-latest
     needs: build-test
 
@@ -48,8 +48,8 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Build for SonarQube
-        run: mvn -B clean verify -DskipTests
+      - name: Compile project
+        run: mvn -B clean verify
 
       # code quality
       - name: SonarCloud Scan
@@ -58,9 +58,9 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
 
-      # artifact {not needed here, used in CD pipeline only}
-      # - name: Package application
-      #   run: mvn -B package -DskipTests
+      # artifact
+      - name: Package application
+        run: mvn -B package -DskipTests
 
   security-scan:
     name: Security Scan 🔒
