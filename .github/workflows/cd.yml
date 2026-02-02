@@ -1,0 +1,115 @@
+# reference doc: https://docs.docker.com/guides/reactjs/configure-github-actions
+name: CD
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-push:
+    name: Build Image & Push to Docker Hub 👷‍♂️
+    runs-on: ubuntu-latest
+
+    steps:
+      # checking out source code
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # setup java
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: maven
+
+      # build JAR
+      - name: Build JAR
+        run: mvn -B clean package -DskipTests
+
+      # setup docker buildx
+      # (reference: https://dev.to/lovestaco/understanding-docker-buildx-builder-modern-docker-builds-with-buildkit-1hd#:~:text=What%20is%20docker%20buildx%20?,Disk%20usage%20management)
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3.12.0
+
+      # Cache docker layers
+      # (https://docs.docker.com/build/cache)
+      # (#https://github.com/marketplace/actions/cache)
+      - name: Cache Docker layers
+        uses: actions/cache@v5
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{runner.os}}-buildx-${{github.sha}}
+          restore-keys: ${{runner.os}}-buildx-
+
+      # extracting metadata
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> "$GITHUB_OUTPUT"
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      # login to docker hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3.6.0
+        with:
+          username: ${{secrets.DOCKER_HUB_USERNAME}}
+          password: ${{secrets.DOCKER_HUB_TOKEN}}
+
+      #build image (only pus after trivy scans image)
+      # (repo: https://github.com/docker/build-push-action)
+      - name: Build Image
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: |
+            ${{secrets.DOCKER_HUB_USERNAME}}/verifiko:latest
+            ${{secrets.DOCKER_HUB_USERNAME}}/verifiko:${{steps.meta.outputs.SHORT_SHA}}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      # scan docker image
+      - name: Trivy Docker Image Scan
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "image"
+          scan-ref: ${{secrets.DOCKER_HUB_USERNAME}}/verifiko:latest
+          format: "sarif"
+          output: "trivy-image-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          ignore-unfixed: true
+
+      # upload the results to github security
+      - name: Upload Trivy image scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-image-results.sarif"
+
+      # fail on any high/critical image vulrabilities
+      - name: Block on high/critical vulnerabilities
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "image"
+          image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/verifiko:latest
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          exit-code: "1"
+
+      # push to docker hub after trivy clearance
+      - name: Push Image to Docker Hub
+        run: |
+          docker push ${{secrets.DOCKER_HUB_USERNAME}}/verifiko:latest
+          docker push ${{secrets.DOCKER_HUB_USERNAME}}/verifiko:${{steps.meta.outputs.SHORT_SHA}}
+
+      # rotating our cache preventing unlimited growth
+      # (https://docs.docker.com/build/ci/github-actions/cache)
+      # (https://github.com/docker/build-push-action/issues/252)
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
