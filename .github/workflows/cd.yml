@@ -9,6 +9,9 @@ jobs:
   build-push:
     name: Build Image & Push to Docker Hub 👷‍♂️
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       # checking out source code
