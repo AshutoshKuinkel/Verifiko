@@ -52,6 +52,9 @@ public class User {
   @Column(name = "avatar_url")
   private String avatarUrl;
 
+  @Column(nullable = false)
+  private int credits = 0;
+
   @Column(name = "joined_date", nullable = false, updatable = false)
   private LocalDate joinedDate = LocalDate.now();
 
