@@ -58,4 +58,13 @@ public class CommentController {
 
     return ResponseEntity.noContent().build();
   }
+
+  @PostMapping("/comments/{id}/mark-helpful")
+  public ResponseEntity<APIResponse<String>> markCommentHelpful(@PathVariable("id") Long id) {
+
+    commentService.markCommentHelpful(id);
+
+    return ResponseEntity.status(HttpStatus.CREATED.value())
+        .body(new APIResponse<>("Successfully marked comment helpful!", null));
+  }
 }
