@@ -1,1 +1,1 @@
-#<p style="text-align:center"><u><b>VERIFIKO</b></u></p>
+<p align="center"><b><u>VERIFIKO</u></b></p>
