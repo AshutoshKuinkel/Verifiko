@@ -11,10 +11,10 @@ updates:
       interval: "weekly"
 
     # Group everything unless it's a security fix
-    groups:
-      maven-dependencies:
-        patterns:
-          - "*"
+    # groups:
+    #   maven-dependencies:
+    #     patterns:
+    #       - "*"
 
     # Avoid crazy ass changes
     ignore:
