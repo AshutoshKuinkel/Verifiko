@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: verifiko-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: verifiko
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
