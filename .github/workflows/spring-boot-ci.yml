@@ -49,7 +49,7 @@ jobs:
           cache: maven
 
       - name: Build for SonarQube
-        run: mvn -B clean verify -DskipTests
+        run: mvn -B clean verify
 
       # code quality
       - name: SonarCloud Scan
