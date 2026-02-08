@@ -26,7 +26,7 @@ public class CreditController {
         .body(new APIResponse<>("Balance successfully fetched!", response));
   }
 
-  @GetMapping("transactions")
+  @GetMapping("/transactions")
   public ResponseEntity<APIResponse<Page<CreditTransaction>>> viewTransactions(
       @RequestParam(value = "page", defaultValue = "0") @Positive int page) {
 

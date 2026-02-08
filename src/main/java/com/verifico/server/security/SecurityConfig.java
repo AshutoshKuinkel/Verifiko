@@ -45,9 +45,9 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, "/", "/api/posts", "/api/posts/{id}/comments", "/api/users/{id}")
                 .permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/post/create", "/api/posts/{id}/comments").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/post/create", "/api/posts/{id}/comments","/api/v1/payments/payment-intent").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/comments/{id}").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/users/me","/api/credits/balance","/api/credits/transactions").authenticated()
                 .requestMatchers(HttpMethod.PATCH, "/api/users/me").authenticated()
                 .anyRequest().authenticated());
     return http.build();
