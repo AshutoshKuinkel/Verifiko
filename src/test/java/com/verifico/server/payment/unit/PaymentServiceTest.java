@@ -220,7 +220,8 @@ class PaymentServiceTest {
 
     when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
 
-    Payment result = paymentService.toTransaction("pi_test_123", CreditsPurchasedAmount.BUY_25_CREDITS, user, 399L);
+    Payment result = paymentService.toTransaction("idempotency-key-123", "pi_test_123",
+        CreditsPurchasedAmount.BUY_25_CREDITS, user, 399L);
 
     assertNotNull(result);
     assertEquals("pi_test_123", result.getPaymentIntentId());
@@ -239,7 +240,8 @@ class PaymentServiceTest {
 
     when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
 
-    paymentService.toTransaction("pi_test_123", CreditsPurchasedAmount.BUY_25_CREDITS, user, 399L);
+    paymentService.toTransaction("idempotency-key-123", "pi_test_123", CreditsPurchasedAmount.BUY_25_CREDITS, user,
+        399L);
 
     verify(paymentRepository, times(1)).save(any(Payment.class));
   }
