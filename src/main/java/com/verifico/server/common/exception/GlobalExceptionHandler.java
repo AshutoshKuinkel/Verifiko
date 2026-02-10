@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.verifico.server.payment.exception.WebhookProcessingException;
+
 import jakarta.validation.ConstraintViolationException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
@@ -78,4 +80,10 @@ public class GlobalExceptionHandler {
 
     return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
   }
+
+  @ExceptionHandler(WebhookProcessingException.class)
+  public ResponseEntity<String> handleWebhookProcessingExceptioEntity(WebhookProcessingException ex) {
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
+  }
+
 }
