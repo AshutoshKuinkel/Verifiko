@@ -122,6 +122,11 @@ public class PaymentService {
         .setAutomaticPaymentMethods(
             PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                 .setEnabled(true)
+                // we only have this .setAllowRedirects set to never for local testing
+                // remove this entire:
+                // .setAllowRedirects(
+                //    PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
+                // once we connect to frontend
                 .setAllowRedirects(
                     PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
                 .build())
