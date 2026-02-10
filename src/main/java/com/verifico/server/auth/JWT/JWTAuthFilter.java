@@ -58,9 +58,10 @@ public class JWTAuthFilter extends OncePerRequestFilter {
   @Override
   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    // skipping auth endpoints:
+    // skipping auth & webhook endpoints of all JWT and immediately pass the request
+    // to the next filter/controller:
     String path = request.getRequestURI();
-    if (path.startsWith("/api/auth")) {
+    if (path.startsWith("/api/auth") || path.equals("/api/v1/payments/webhook/stripe")) {
       filterChain.doFilter(request, response);
       return;
     }
