@@ -61,6 +61,9 @@ public class Payment {
   @Column(nullable = false)
   private Long amountInCents;
 
+  @Column
+  private Boolean creditsAwarded = false;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User transactionInitiator;

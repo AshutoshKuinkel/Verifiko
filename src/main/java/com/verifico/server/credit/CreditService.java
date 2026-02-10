@@ -65,13 +65,11 @@ public class CreditService {
   }
 
   @Transactional
-  CreditTransaction addPurchasedCredits(Long userId, int amount) {
+  public CreditTransaction addPurchasedCredits(Long userId, int amount) {
     User user = checkForUserById(userId);
 
-    // add something like here after payment api is built:
-    // if (!paymentVerificationService.isVerifiedWebhook()) {
-    // throw new SecurityException("Credits can only be added after payment");
-    // } or just create like one time payment tokens...
+    // This method should ONLY be called by PaymentService after webhook
+    // verification.
 
     user.setCredits(user.getCredits() + amount);
     userRepository.save(user);

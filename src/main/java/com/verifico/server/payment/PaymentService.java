@@ -3,6 +3,8 @@ package com.verifico.server.payment;
 import java.time.Duration;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -11,12 +13,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.StripeObject;
 import com.stripe.net.RequestOptions;
+import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.verifico.server.credit.CreditService;
 import com.verifico.server.payment.dto.PaymentIntentResponse;
 import com.verifico.server.payment.dto.PurchaseCreditsRequest;
+import com.verifico.server.payment.exception.WebhookProcessingException;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
 
@@ -30,11 +38,18 @@ public class PaymentService {
   @Value("${stripe.secret-key}")
   private String stripeKey;
 
+  @Value("${stripe.webhook-secret}")
+  private String webhookSecret;
+
   private final UserRepository userRepository;
 
   private final PaymentRepository paymentRepository;
 
   private final StringRedisTemplate redisTemplate;
+
+  private final CreditService creditService;
+
+  private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
   @Transactional
   public PaymentIntentResponse paymentIntent(PurchaseCreditsRequest request, String idempotencyKey)
@@ -132,6 +147,109 @@ public class PaymentService {
     return new PaymentIntentResponse(
         paymentIntent.getClientSecret(),
         paymentIntent.getId());
+  }
+
+  public void processWebhook(String payload, String sigHeader) {
+    try {
+      Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+      switch (event.getType()) {
+
+        case "payment_intent.succeeded" -> {
+          Optional<StripeObject> obj = event.getDataObjectDeserializer().getObject();
+
+          if (obj.isEmpty()) {
+            log.warn(
+                "Unable to deserialize Stripe event {} (type: {}, api version: {}) — possibly API version mismatch",
+                event.getId(), event.getType(), event.getApiVersion());
+            return; // acknowlegde only, don't retry
+          }
+
+          PaymentIntent intent = (PaymentIntent) obj.get();
+
+          // log successful payment along with intent id here
+          log.info("✔ Payment successful: {}", intent.getId());
+          // call handleSuccessfulPayment function here
+          handleSuccessPayment(intent.getId());
+        }
+
+        case "payment_intent.payment_failed" -> {
+          Optional<StripeObject> obj = event.getDataObjectDeserializer().getObject();
+
+          if (obj.isEmpty()) {
+            log.warn(
+                "Unable to deserialize Stripe event {} (type: {}, api version: {}) — possibly API version mismatch",
+                event.getId(), event.getType(), event.getApiVersion());
+            return; // acknowlegde only, don't retry
+          }
+
+          PaymentIntent intent = (PaymentIntent) obj.get();
+
+          // log payment failed w intent id here
+          log.warn("✘ Payment failed: {}", intent.getId());
+          // call handlefailedpayment function here
+          handleFailedPayment(intent.getId());
+        }
+
+        // if not either of these 2 above, log unhandled event type. (default)
+        default -> log.debug("Unhandled event type: {}", event.getType());
+      }
+    } catch (SignatureVerificationException e) {
+      // log invalid webhook signature
+      log.error("✘ Invalid webhook signature", e);
+      throw new SecurityException("Invalid webhook signature");
+    } catch (Exception e) {
+      // log webhook processing err
+      log.error("✘ Webhook processing error", e);
+      throw new WebhookProcessingException("Unexpected webhook processing failure", e);
+    }
+  }
+
+  @Transactional
+  public void handleSuccessPayment(String paymentIntentId) {
+    Payment payment = paymentRepository.findByPaymentIntentId(paymentIntentId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
+
+    // check if payment already processed:
+    if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+      return;
+    }
+
+    if (payment.getCreditsAwarded() != null && payment.getCreditsAwarded()) {
+      log.info("Credits already awarded for payment {}, skipping", payment.getId());
+      return;
+    }
+
+    payment.setStatus(PaymentStatus.SUCCEEDED);
+    payment.setCreditsAwarded(true);
+    paymentRepository.save(payment);
+    log.info("Payment {} marked as successful", payment.getId());
+
+    // adding credits to user
+    int credits = switch (payment.getPurchasedPackage()) {
+      case BUY_25_CREDITS -> 25;
+      case BUY_50_CREDITS -> 50;
+      case BUY_75_CREDITS -> 75;
+      case BUY_150_CREDITS -> 150;
+    };
+
+    creditService.addPurchasedCredits(payment.getTransactionInitiator().getId(), credits);
+    log.info("{} credits successfully added to user {} balance", credits, payment.getTransactionInitiator().getId());
+  }
+
+  @Transactional
+  public void handleFailedPayment(String paymentIntentId) {
+    Payment payment = paymentRepository.findByPaymentIntentId(paymentIntentId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found!"));
+
+    // check if already marked as failed:
+    if (payment.getStatus() == PaymentStatus.FAILED) {
+      return;
+    }
+
+    payment.setStatus(PaymentStatus.FAILED);
+    paymentRepository.save(payment);
+    // add logging here saying payment marked as failed w/payment id..
+    log.warn("Payment {} marked as failed", payment.getId());
   }
 
   // helpers:
