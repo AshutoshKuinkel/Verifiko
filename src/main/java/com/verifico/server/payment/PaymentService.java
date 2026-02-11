@@ -125,7 +125,7 @@ public class PaymentService {
                 // we only have this .setAllowRedirects set to never for local testing
                 // remove this entire:
                 // .setAllowRedirects(
-                //    PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
+                // PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
                 // once we connect to frontend
                 .setAllowRedirects(
                     PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
@@ -212,7 +212,7 @@ public class PaymentService {
   }
 
   @Transactional
-  public void handleSuccessPayment(String paymentIntentId) {
+  private void handleSuccessPayment(String paymentIntentId) {
     Payment payment = paymentRepository.findByPaymentIntentId(paymentIntentId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
 
@@ -226,11 +226,6 @@ public class PaymentService {
       return;
     }
 
-    payment.setStatus(PaymentStatus.SUCCEEDED);
-    payment.setCreditsAwarded(true);
-    paymentRepository.save(payment);
-    log.info("Payment {} marked as successful", payment.getId());
-
     // adding credits to user
     int credits = switch (payment.getPurchasedPackage()) {
       case BUY_25_CREDITS -> 25;
@@ -241,6 +236,11 @@ public class PaymentService {
 
     creditService.addPurchasedCredits(payment.getTransactionInitiator().getId(), credits);
     log.info("{} credits successfully added to user {} balance", credits, payment.getTransactionInitiator().getId());
+
+    payment.setStatus(PaymentStatus.SUCCEEDED);
+    payment.setCreditsAwarded(true);
+    paymentRepository.save(payment);
+    log.info("Payment {} marked as successful", payment.getId());
   }
 
   @Transactional
