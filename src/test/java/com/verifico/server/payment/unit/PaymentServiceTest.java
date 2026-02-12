@@ -4,12 +4,21 @@
 package com.verifico.server.payment.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -19,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -29,12 +39,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
+import com.stripe.model.PaymentIntent;
+import com.stripe.net.Webhook;
+import com.verifico.server.credit.CreditService;
 import com.verifico.server.payment.CreditsPurchasedAmount;
 import com.verifico.server.payment.Payment;
 import com.verifico.server.payment.PaymentRepository;
 import com.verifico.server.payment.PaymentService;
+import com.verifico.server.payment.PaymentStatus;
 import com.verifico.server.payment.dto.PaymentIntentResponse;
 import com.verifico.server.payment.dto.PurchaseCreditsRequest;
+import com.verifico.server.payment.exception.WebhookProcessingException;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
 
@@ -54,6 +71,9 @@ class PaymentServiceTest {
   ValueOperations<String, String> valueOperations;
 
   @Mock
+  CreditService creditService;
+
+  @Mock
   SecurityContext securityContext;
 
   @Mock
@@ -66,6 +86,7 @@ class PaymentServiceTest {
   void setup() {
     SecurityContextHolder.setContext(securityContext);
     ReflectionTestUtils.setField(paymentService, "stripeKey", "sk_test_fake_key");
+    ReflectionTestUtils.setField(paymentService, "webhookSecret", "whsec_fake_secret_for_tests");
   }
 
   private User mockUser() {
@@ -245,4 +266,294 @@ class PaymentServiceTest {
 
     verify(paymentRepository, times(1)).save(any(Payment.class));
   }
+
+  // webhook core buisness logic test endpoints:
+  // 1. processWebhook_succeeded_happyPath_awardsCorrectCredits()
+  @Test
+  void processWebhook_succeeded_happyPath_awardsCorrectCredits() {
+    // Creating try-with-resources block for mockStatic
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      // mock stripe event
+      Event mockEvent = mock(Event.class);
+      PaymentIntent mockIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockIntent.getId()).thenReturn("pi_test_123");
+      when(mockEvent.getType()).thenReturn("payment_intent.succeeded");
+      when(mockEvent.getDataObjectDeserializer()).thenReturn(mockDeserializer);
+      when(mockDeserializer.getObject()).thenReturn(Optional.of(mockIntent));
+
+      // mock static Webhook.constructEvent
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      User user = mockUser();
+      Payment payment = new Payment();
+      payment.setId(42L);
+      payment.setPaymentIntentId("pi_test_123");
+      payment.setPurchasedPackage(CreditsPurchasedAmount.BUY_50_CREDITS);
+      payment.setTransactionInitiator(user);
+      payment.setStatus(PaymentStatus.PENDING);
+      payment.setCreditsAwarded(false);
+
+      when(paymentRepository.findByPaymentIntentId("pi_test_123"))
+          .thenReturn(Optional.of(payment));
+
+      paymentService.processWebhook("fake-payload", "fake-signature");
+
+      assertEquals(PaymentStatus.SUCCEEDED, payment.getStatus());
+      assertTrue(payment.getCreditsAwarded());
+
+      verify(paymentRepository).save(payment);
+      verify(creditService).addPurchasedCredits(user.getId(), 50);
+    }
+  }
+
+  // 2. processWebhook_succeeded_alreadySucceeded_doesNothing()
+  @Test
+  void processWebhook_succeeded_alreadySucceeded_doesNothing() {
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      Event mockEvent = mock(Event.class);
+      PaymentIntent mockIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockIntent.getId()).thenReturn("pi_test_123");
+      when(mockEvent.getType()).thenReturn("payment_intent.succeeded");
+      when(mockEvent.getDataObjectDeserializer()).thenReturn(mockDeserializer);
+      when(mockDeserializer.getObject()).thenReturn(Optional.of(mockIntent));
+
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      User user = mockUser();
+      Payment payment = new Payment();
+      payment.setId(42L);
+      payment.setPaymentIntentId("pi_test_123");
+      payment.setPurchasedPackage(CreditsPurchasedAmount.BUY_50_CREDITS);
+      payment.setTransactionInitiator(user);
+      payment.setStatus(PaymentStatus.SUCCEEDED);
+      payment.setCreditsAwarded(true);
+
+      when(paymentRepository.findByPaymentIntentId("pi_test_123"))
+          .thenReturn(Optional.of(payment));
+
+      paymentService.processWebhook("bomboo", "claat");
+
+      assertEquals(PaymentStatus.SUCCEEDED, payment.getStatus());
+
+      verify(paymentRepository, never()).save(any(Payment.class));
+
+      verify(creditService, never()).addPurchasedCredits(anyLong(), anyInt());
+    }
+  }
+
+  // 3. processWebhook_succeeded_creditsAlreadyAwarded_doesNothing()
+  @Test
+  void processWebhook_succeeded_creditsAlreadyAwarded_doesNothing() {
+    try (MockedStatic<Webhook> mockWebhook = mockStatic(Webhook.class)) {
+
+      Event mockedEvent = mock(Event.class);
+      PaymentIntent mockedIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockedDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockedIntent.getId()).thenReturn("pi_test_123");
+      when(mockedEvent.getType()).thenReturn("payment_intent.succeeded");
+      when(mockedEvent.getDataObjectDeserializer()).thenReturn(mockedDeserializer);
+      when(mockedDeserializer.getObject()).thenReturn(Optional.of(mockedIntent));
+
+      mockWebhook.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockedEvent);
+
+      User user = mockUser();
+      Payment payment = new Payment();
+      payment.setId(42L);
+      payment.setPaymentIntentId("pi_test_123");
+      payment.setPurchasedPackage(CreditsPurchasedAmount.BUY_50_CREDITS);
+      payment.setTransactionInitiator(user);
+      payment.setStatus(PaymentStatus.PENDING);
+      payment.setCreditsAwarded(true);
+
+      when(paymentRepository.findByPaymentIntentId("pi_test_123"))
+          .thenReturn(Optional.of(payment));
+
+      paymentService.processWebhook("bomboo", "claat");
+
+      verify(paymentRepository, never()).save(any(Payment.class));
+
+      verify(creditService, never()).addPurchasedCredits(anyLong(), anyInt());
+    }
+  }
+
+  // 4. processWebhook_succeeded_creditServiceThrows_doesNotCommitChanges()
+  @Test
+  void processWebhook_succeeded_creditServiceThrows_doesNotCommitChanges() {
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      Event mockEvent = mock(Event.class);
+      PaymentIntent mockIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockIntent.getId()).thenReturn("pi_test_123");
+      when(mockEvent.getType()).thenReturn("payment_intent.succeeded");
+      when(mockEvent.getDataObjectDeserializer()).thenReturn(mockDeserializer);
+      when(mockDeserializer.getObject()).thenReturn(Optional.of(mockIntent));
+
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      User user = mockUser();
+      Payment payment = new Payment();
+      payment.setId(42L);
+      payment.setPaymentIntentId("pi_test_123");
+      payment.setPurchasedPackage(CreditsPurchasedAmount.BUY_50_CREDITS);
+      payment.setTransactionInitiator(user);
+      payment.setStatus(PaymentStatus.PENDING);
+      payment.setCreditsAwarded(false);
+
+      when(paymentRepository.findByPaymentIntentId("pi_test_123"))
+          .thenReturn(Optional.of(payment));
+
+      // Simulate failure in credit awarding
+      doThrow(new RuntimeException("Credit service unavailable"))
+          .when(creditService).addPurchasedCredits(user.getId(), 50);
+
+      assertThrows(RuntimeException.class,
+          () -> paymentService.processWebhook("fake-payload", "fake-signature"));
+
+      // Assert no commit happened (in unit test we see the state before throw)
+      assertEquals(PaymentStatus.PENDING, payment.getStatus());
+      assertFalse(payment.getCreditsAwarded());
+
+      verify(paymentRepository, never()).save(any(Payment.class));
+      // creditService called but threw
+      verify(creditService).addPurchasedCredits(user.getId(), 50);
+    }
+  }
+
+  // 5. processWebhook_failed_marksAsFailed()
+  @Test
+  void processWebhook_failed_marksAsFailed() {
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      Event mockEvent = mock(Event.class);
+      PaymentIntent mockIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockIntent.getId()).thenReturn("pi_fail_456");
+      when(mockEvent.getType()).thenReturn("payment_intent.payment_failed");
+      when(mockEvent.getDataObjectDeserializer()).thenReturn(mockDeserializer);
+      when(mockDeserializer.getObject()).thenReturn(Optional.of(mockIntent));
+
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      User user = mockUser();
+      Payment payment = new Payment();
+      payment.setId(99L);
+      payment.setPaymentIntentId("pi_fail_456");
+      payment.setPurchasedPackage(CreditsPurchasedAmount.BUY_25_CREDITS);
+      payment.setTransactionInitiator(user);
+      payment.setStatus(PaymentStatus.PENDING);
+      payment.setCreditsAwarded(false);
+
+      when(paymentRepository.findByPaymentIntentId("pi_fail_456"))
+          .thenReturn(Optional.of(payment));
+
+      paymentService.processWebhook("fake-payload", "fake-signature");
+
+      assertEquals(PaymentStatus.FAILED, payment.getStatus());
+      verify(paymentRepository).save(payment);
+      verify(creditService, never()).addPurchasedCredits(anyLong(), anyInt());
+    }
+  }
+
+  // 6. processWebhook_failed_alreadyFailed_doesNothing()
+  @Test
+  void processWebhook_failed_alreadyFailed_doesNothing() {
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      Event mockEvent = mock(Event.class);
+      PaymentIntent mockIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockIntent.getId()).thenReturn("pi_fail_456");
+      when(mockEvent.getType()).thenReturn("payment_intent.payment_failed");
+      when(mockEvent.getDataObjectDeserializer()).thenReturn(mockDeserializer);
+      when(mockDeserializer.getObject()).thenReturn(Optional.of(mockIntent));
+
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      Payment payment = new Payment();
+      payment.setId(99L);
+      payment.setPaymentIntentId("pi_fail_456");
+      payment.setStatus(PaymentStatus.FAILED);
+
+      when(paymentRepository.findByPaymentIntentId("pi_fail_456"))
+          .thenReturn(Optional.of(payment));
+
+      paymentService.processWebhook("fake-payload", "fake-signature");
+
+      // No change, no save
+      assertEquals(PaymentStatus.FAILED, payment.getStatus());
+      verify(paymentRepository, never()).save(any(Payment.class));
+      verify(creditService, never()).addPurchasedCredits(anyLong(), anyInt());
+    }
+  }
+
+  // 7. processWebhook_unknownEventType_noSideEffects()
+  @Test
+  void processWebhook_unknownEventType_noSideEffects() {
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      Event mockEvent = mock(Event.class);
+      when(mockEvent.getType()).thenReturn("charge.refunded"); // unhandled
+
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      paymentService.processWebhook("fake-payload", "fake-signature");
+
+      // No DB or credit interactions
+      verifyNoInteractions(paymentRepository);
+      verifyNoInteractions(creditService);
+    }
+  }
+
+  // 8. processWebhook_success_paymentNotFound_throwsNotFound()
+  @Test
+  void processWebhook_success_paymentNotFound_throwsNotFound() {
+    try (MockedStatic<Webhook> webhookMock = mockStatic(Webhook.class)) {
+
+      Event mockEvent = mock(Event.class);
+      PaymentIntent mockIntent = mock(PaymentIntent.class);
+      EventDataObjectDeserializer mockDeserializer = mock(EventDataObjectDeserializer.class);
+
+      when(mockIntent.getId()).thenReturn("pi_missing_789");
+      when(mockEvent.getType()).thenReturn("payment_intent.succeeded");
+      when(mockEvent.getDataObjectDeserializer()).thenReturn(mockDeserializer);
+      when(mockDeserializer.getObject()).thenReturn(Optional.of(mockIntent));
+
+      webhookMock.when(() -> Webhook.constructEvent(anyString(), anyString(), anyString()))
+          .thenReturn(mockEvent);
+
+      when(paymentRepository.findByPaymentIntentId("pi_missing_789"))
+          .thenReturn(Optional.empty());
+
+      WebhookProcessingException ex = assertThrows(WebhookProcessingException.class,
+          () -> paymentService.processWebhook("fake-payload", "fake-signature"));
+
+      assertTrue(ex.getCause() instanceof ResponseStatusException);
+      ResponseStatusException cause = (ResponseStatusException) ex.getCause();
+      assertEquals(HttpStatus.NOT_FOUND, cause.getStatusCode());
+      assertEquals("Payment not found", cause.getReason());
+
+      // No further side effects
+      verify(creditService, never()).addPurchasedCredits(anyLong(), anyInt());
+      verify(paymentRepository, never()).save(any(Payment.class));
+    }
+  }
+
 }
