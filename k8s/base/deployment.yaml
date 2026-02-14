@@ -27,7 +27,7 @@ spec:
 
       containers:
         - name: verifiko-container
-          image: ashutoshkuinkel/verifiko:latest #Cant be using latest during actual prod.. only during like dev
+          image: ashutoshkuinkel/verifiko:9f666a3 #This is static, later when deploying to k8s I need to make sure i have this set to a dynamic variable and use SHORT_SHA in cd file...
 
           securityContext:
             runAsUser: 1000
