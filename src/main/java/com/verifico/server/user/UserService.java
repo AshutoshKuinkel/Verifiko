@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.verifico.server.auth.token.RefreshTokenRepository;
+import com.verifico.server.email.BrevoEmailService;
 import com.verifico.server.user.dto.ProfileRequest;
 import com.verifico.server.user.dto.PublicUserResponse;
 import com.verifico.server.user.dto.UpdatePasswordRequest;
@@ -25,6 +26,8 @@ public class UserService {
   private final PasswordEncoder passwordEncoder;
 
   private final RefreshTokenRepository refreshTokenRepository;
+
+  private final BrevoEmailService emailService;
 
   public UserResponse meEndpoint() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -139,6 +142,8 @@ public class UserService {
 
     // invalidating all refresh tokens so user has to login again
     refreshTokenRepository.deleteByUserId(user.getId());
+
+    emailService.sendPasswordChangedEmailForv1(user);
   }
 
   public UserResponse toUserResponse(User user) {
