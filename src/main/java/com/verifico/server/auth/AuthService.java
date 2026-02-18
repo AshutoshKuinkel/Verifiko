@@ -15,7 +15,7 @@ import com.verifico.server.auth.dto.LoginRequest;
 import com.verifico.server.auth.dto.RegisterRequest;
 import com.verifico.server.auth.token.RefreshToken;
 import com.verifico.server.auth.token.RefreshTokenService;
-import com.verifico.server.email.BrevoEmailService;
+import com.verifico.server.email.EmailService;
 import com.verifico.server.auth.dto.LoginResponse;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
@@ -35,14 +35,14 @@ public class AuthService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final JWTService jwtService;
   private final RefreshTokenService refreshTokenService;
-  private final BrevoEmailService emailService;
+  private final EmailService emailService;
   @Value("${JWT_EXPIRY}")
   private int accessTokenMins;
   @Value("${REFRESH_TOKEN_DAYS}")
   private long RefreshTokenDays;
 
   public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JWTService jwtService,
-      RefreshTokenService refreshTokenService, BrevoEmailService emailService) {
+      RefreshTokenService refreshTokenService, EmailService emailService) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
