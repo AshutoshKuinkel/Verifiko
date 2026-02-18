@@ -22,7 +22,7 @@ import com.stripe.net.RequestOptions;
 import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.verifico.server.credit.CreditService;
-import com.verifico.server.email.BrevoEmailService;
+import com.verifico.server.email.EmailService;
 import com.verifico.server.payment.dto.PaymentIntentResponse;
 import com.verifico.server.payment.dto.PurchaseCreditsRequest;
 import com.verifico.server.payment.exception.WebhookProcessingException;
@@ -50,7 +50,7 @@ public class PaymentService {
 
   private final CreditService creditService;
 
-  private final BrevoEmailService emailService;
+  private final EmailService emailService;
 
   private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
