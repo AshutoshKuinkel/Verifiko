@@ -27,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.verifico.server.auth.token.RefreshTokenRepository;
+import com.verifico.server.email.EmailService;
 import com.verifico.server.user.User;
 import com.verifico.server.user.UserRepository;
 import com.verifico.server.user.UserService;
@@ -51,6 +52,9 @@ class UserServiceTest {
 
   @Mock
   RefreshTokenRepository refreshTokenRepository;
+
+  @Mock
+  EmailService emailService;
 
   @InjectMocks
   UserService userService;
