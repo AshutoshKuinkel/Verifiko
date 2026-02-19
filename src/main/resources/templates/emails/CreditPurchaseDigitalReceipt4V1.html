@@ -1,272 +1,205 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verifiko Purchase Receipt</title>
-
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        background-color: #f4f7f9;
-        -webkit-font-smoothing: antialiased;
-      }
-
-      .wrapper {
-        width: 100%;
-        table-layout: fixed;
-        background-color: #f4f7f9;
-        padding: 40px 0;
-      }
-
-      .main {
-        background-color: #ffffff;
-        margin: 0 auto;
-        width: 100%;
-        max-width: 600px;
-        border-spacing: 0;
-        color: #1a1a1a;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      }
-
-      .header {
-        padding: 30px;
-        border-bottom: 1px solid #edf2f7;
-      }
-
-      .receipt-badge {
-        float: right;
-        background-color: #dcfce7;
-        color: #059669;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-
-      .content {
-        padding: 40px 30px;
-      }
-
-      .receipt-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 25px;
-        margin: 25px 0;
-        background-color: #ffffff;
-      }
-
-      .item-row {
-        padding: 15px 0;
-        border-bottom: 1px dashed #e2e8f0;
-      }
-
-      .total-row {
-        padding: 20px 0 10px;
-        font-size: 18px;
-        font-weight: 700;
-      }
-
-      .label-sm {
-        color: #64748b;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-      }
-
-      .value-sm {
-        color: #1e293b;
-        font-size: 14px;
-        font-weight: 500;
-      }
-
-      .btn-primary {
-        background-color: #10b981;
-        color: #ffffff;
-        padding: 14px 28px;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
-        display: inline-block;
-      }
-
-      .btn-secondary {
-        color: #64748b;
-        padding: 14px 20px;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 14px;
-        display: inline-block;
-        margin-left: 10px;
-      }
-
-      .footer {
-        padding: 30px;
-        text-align: center;
-        font-size: 12px;
-        color: #94a3b8;
-      }
-
-      .mint {
-        color: #10b981;
-      }
-    </style>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Credit Purchase Digital Receipt Email</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#10b981", // Mint green
+              secondary: "#111827", // Dark navy/black
+              "mint-light": "#d1fae5",
+              "mint-dark": "#064e3b",
+              "background-light": "#f3f4f6",
+              "background-dark": "#0f172a",
+              "card-light": "#ffffff",
+              "card-dark": "#1e293b",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              "2xl": "1rem",
+            },
+          },
+        },
+      };
+    </script>
   </head>
-
-  <body>
-    <table class="main" width="100%" cellpadding="0" cellspacing="0">
-      <!-- Header -->
-      <tr>
-        <td class="header">
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td align="left" valign="middle">
-                <h2 style="margin: 0">Verifiko</h2>
-              </td>
-              <td align="right" valign="middle">
-                <span
-                  style="
-                    background-color: #dcfce7;
-                    color: #059669;
-                    padding: 4px 12px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    display: inline-block;
-                  "
-                >
-                  Receipt
-                </span>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-
-      <!-- Content -->
-      <tr>
-        <td class="content">
-          <h1 style="margin: 0; font-size: 26px; color: #0f172a">
+  <body
+    class="bg-background-light dark:bg-background-dark font-sans min-h-screen flex items-center justify-center p-4"
+  >
+    <div
+      class="max-w-xl w-full bg-card-light dark:bg-card-dark rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+    >
+      <div
+        class="px-8 py-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark flex justify-between items-center"
+      >
+        <div class="flex items-center gap-2">
+          <span
+            class="text-xl font-bold text-secondary dark:text-white tracking-tight"
+            >Verifiko</span
+          >
+        </div>
+        <span
+          class="text-xs font-medium px-2 py-1 rounded bg-mint-light text-mint-dark uppercase tracking-wide"
+          >Receipt</span
+        >
+      </div>
+      <div class="p-8 sm:p-10">
+        <div class="text-left mb-8">
+          <h1 class="text-2xl font-bold text-secondary dark:text-white mb-2">
             Payment confirmed
           </h1>
-
-          <p style="color: #64748b; font-size: 16px; margin-top: 10px">
+          <p class="text-gray-500 dark:text-gray-400">
             Thanks for your purchase. Your credits are ready to use.
           </p>
-
-          <!-- Receipt Card -->
-          <div class="receipt-card">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="padding-bottom: 20px">
-                  <div class="label-sm">Receipt Number</div>
-                  <div class="value-sm">#INV-{{date}}-ORD</div>
-                </td>
-
-                <td style="text-align: right; padding-bottom: 20px">
-                  <div class="label-sm">Date Paid</div>
-                  <div class="value-sm">{{date}}</div>
-                </td>
-              </tr>
-
-              <tr>
-                <td colspan="2" class="item-row">
-                  <div class="value-sm" style="float: right">{{price}}</div>
-
-                  <div class="value-sm" style="font-weight: 700">
-                    Startup Validation Credits
-                  </div>
-
-                  <div
-                    class="label-sm"
-                    style="text-transform: none; margin-top: 4px"
-                  >
-                    Package: {{credits}} Credits
-                  </div>
-                </td>
-              </tr>
-
-              <tr>
-                <td colspan="2" class="total-row">
-                  <div style="float: right; color: #0f172a">{{price}}</div>
-                  <div style="color: #0f172a">Total Paid</div>
-                </td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Payment Method -->
+        </div>
+        <div
+          class="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-8"
+        >
           <div
-            style="
-              margin-top: 35px;
-              border-top: 1px solid #f1f5f9;
-              padding-top: 25px;
-            "
+            class="grid grid-cols-2 gap-4 p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30"
           >
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td width="50%">
-                  <div class="label-sm">Payment Method</div>
-                  <div class="value-sm" style="margin-top: 8px">
-                    <span
-                      style="
-                        background: #f1f5f9;
-                        padding: 4px 8px;
-                        border-radius: 4px;
-                      "
-                    >
-                      💳 •••• 4242
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            </table>
+            <div>
+              <p
+                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
+                Receipt Number
+              </p>
+              <p class="text-sm font-mono text-secondary dark:text-white">
+                #INV-2023-0942
+              </p>
+            </div>
+            <div class="text-right">
+              <p
+                class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+              >
+                Date Paid
+              </p>
+              <p class="text-sm text-secondary dark:text-white">Oct 24, 2023</p>
+            </div>
           </div>
-
-          <!-- Buttons -->
-          <div style="margin-top: 40px">
-            <a href="https://verifiko.com/dashboard" class="btn-primary">
-              Start Validating
-            </a>
-
-            <a href="#" class="btn-secondary"> Download PDF </a>
-          </div>
-        </td>
-      </tr>
-
-      <!-- Footer -->
-      <tr>
-        <td class="footer">
-          <p>
-            Need help?
-            <a
-              href="mailto:verifiko0@gmail.com"
-              class="mint"
-              style="text-decoration: none"
+          <div class="p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex flex-col">
+                <span
+                  class="text-sm font-semibold text-secondary dark:text-white"
+                  >Startup Validation Credits</span
+                >
+                <span class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                  >Package: Pro Validator (+50 Credits)</span
+                >
+              </div>
+              <span class="text-sm font-medium text-secondary dark:text-white"
+                >$49.00</span
+              >
+            </div>
+            <div
+              class="border-t border-gray-200 dark:border-gray-700 my-4 border-dashed"
+            ></div>
+            <div class="flex justify-between mb-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400"
+                >Subtotal</span
+              >
+              <span class="text-xs font-medium text-secondary dark:text-white"
+                >$49.00</span
+              >
+            </div>
+            <div class="flex justify-between mb-4">
+              <span class="text-xs text-gray-500 dark:text-gray-400"
+                >Tax (0%)</span
+              >
+              <span class="text-xs font-medium text-secondary dark:text-white"
+                >$0.00</span
+              >
+            </div>
+            <div
+              class="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700"
             >
-              Contact Support
-            </a>
-          </p>
-
-          <p style="margin-top: 15px">
-            &copy; 2026 Verifiko Inc. All rights reserved.<br />
-            Sydney, NSW Australia
-          </p>
-
-          <p style="margin-top: 10px">
-            <a href="#" style="color: #94a3b8">Privacy Policy</a>
-            &bull;
-            <a href="#" style="color: #94a3b8">Terms of Service</a>
-          </p>
-        </td>
-      </tr>
-    </table>
+              <span class="text-sm font-bold text-secondary dark:text-white"
+                >Total</span
+              >
+              <span class="text-xl font-bold text-secondary dark:text-white"
+                >$49.00</span
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-3 mb-8 text-sm text-gray-600 dark:text-gray-300"
+        >
+          <span class="font-medium text-secondary dark:text-white"
+            >Payment Method:</span
+          >
+          <div
+            class="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-1 rounded"
+          >
+            <span
+              class="material-symbols-outlined text-gray-400"
+              style="font-size: 16px"
+              >credit_card</span
+            >
+            <span class="font-mono text-xs">•••• 4242</span>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 items-center">
+          <a
+            class="w-full sm:w-auto text-center px-6 py-3 bg-primary text-white font-medium text-sm rounded-lg hover:bg-opacity-90 transition-all shadow-sm"
+            href="#"
+          >
+            Start Validating
+          </a>
+          <a
+            class="w-full sm:w-auto flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-secondary dark:hover:text-white font-medium transition-colors py-3 sm:py-0"
+            href="#"
+          >
+            <span class="material-symbols-outlined" style="font-size: 18px"
+              >download</span
+            >
+            Download PDF
+          </a>
+        </div>
+      </div>
+      <div
+        class="bg-gray-50 dark:bg-gray-900 px-8 py-6 border-t border-gray-100 dark:border-gray-800"
+      >
+        <p
+          class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center sm:text-left"
+        >
+          Need help?
+          <a class="text-primary hover:underline" href="#">Contact Support</a>
+        </p>
+        <div
+          class="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-400 dark:text-gray-500"
+        >
+          <span>© 2026 Verifiko Inc.</span>
+          <div class="flex gap-4">
+            <a class="hover:text-gray-600 dark:hover:text-gray-300" href="#"
+              >Privacy</a
+            >
+            <a class="hover:text-gray-600 dark:hover:text-gray-300" href="#"
+              >Terms</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
