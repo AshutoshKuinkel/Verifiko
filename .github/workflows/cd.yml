@@ -77,7 +77,7 @@ jobs:
 
       # scan docker image
       - name: Trivy Docker Image Scan
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           scan-type: "image"
           scan-ref: ${{secrets.DOCKER_HUB_USERNAME}}/verifiko:latest
@@ -95,7 +95,7 @@ jobs:
 
       # fail on any high/critical image vulrabilities
       - name: Block on high/critical vulnerabilities
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           scan-type: "image"
           image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/verifiko:latest
