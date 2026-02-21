@@ -78,6 +78,14 @@ public class EmailService {
         sendHtmlEmail(user.getEmail(), "Your password was changed", html);
     }
 
+    @Async
+    public void changePasswordResetLinkEmailForv1(String token, String email) {
+        String html = loadTemplate("emails/changePasswordResetLink4V1.html")
+                .replace("{{token}}", token);
+
+        sendHtmlEmail(email, "Password Reset Link", html);
+    }
+
     // helper template loader
     private String loadTemplate(String path) {
         try {
