@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-push:
-    name: Build Image & Push to Docker Hub 👷‍♂️
+    name: Build Image & Push to Docker Hub
     runs-on: ubuntu-latest
     permissions:
       contents: read
