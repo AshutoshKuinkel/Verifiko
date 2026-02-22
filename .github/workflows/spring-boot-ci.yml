@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test:
-    name: Build & Test ⛷️
+    name: Build & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +31,7 @@ jobs:
         run: mvn -B clean verify
 
   code-quality:
-    name: Code Quality 🥏
+    name: Code Quality
     runs-on: ubuntu-latest
     needs: build-test
 
@@ -63,7 +63,7 @@ jobs:
       #   run: mvn -B package -DskipTests
 
   security-scan:
-    name: Security Scan 🔒
+    name: Security Scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
