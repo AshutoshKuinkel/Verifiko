@@ -1,5 +1,6 @@
 package com.verifico.server.auth.unit;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -17,5 +18,6 @@ public class MfaServiceTest {
   @InjectMocks
   MfaService mfaService;
 
-  
+  // token generation endpoint:
+  // 1. happy path
 }
