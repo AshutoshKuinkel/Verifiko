@@ -2,7 +2,7 @@ package com.verifico.server.auth.mfa;
 
 import java.time.LocalDateTime;
 
-import org.springframework.boot.security.autoconfigure.SecurityProperties.User;
+import com.verifico.server.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,7 +40,7 @@ public class Mfa {
   private User user;
 
   @Column(nullable = false)
-  private boolean used;
+  private boolean used = false;
 
   @Column(nullable = false)
   private LocalDateTime expiresAt;
