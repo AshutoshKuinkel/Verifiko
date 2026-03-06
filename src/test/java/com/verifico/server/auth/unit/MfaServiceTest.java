@@ -113,7 +113,7 @@ class MfaServiceTest {
   void noActiveTokenFoundThrowsBadRequest() {
     User user = mockUser();
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.empty());
 
@@ -134,7 +134,7 @@ class MfaServiceTest {
     Mfa expiredToken = mockValidToken("hashedCode");
     expiredToken.setExpiresAt(LocalDateTime.now().minusSeconds(1));
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.of(expiredToken));
 
@@ -155,7 +155,7 @@ class MfaServiceTest {
     Mfa usedToken = mockValidToken("hashedCode");
     usedToken.setUsed(true);
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.of(usedToken));
 
@@ -176,7 +176,7 @@ class MfaServiceTest {
     Mfa lockedToken = mockValidToken("hashedCode");
     lockedToken.setAttempts(5);
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.of(lockedToken));
 
@@ -197,7 +197,7 @@ class MfaServiceTest {
     Mfa token = mockValidToken("hashedCode");
     token.setAttempts(2);
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.of(token));
 
@@ -225,7 +225,7 @@ class MfaServiceTest {
     Mfa token = mockValidToken("hashedCode");
     token.setAttempts(2);
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.of(token));
 
@@ -249,7 +249,7 @@ class MfaServiceTest {
     Mfa token = mockValidToken("hashedCode");
     token.setAttempts(4); // one below max (5)
 
-    when(mfaRepository.findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
+    when(mfaRepository.findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(
         eq(user.getId()), any(LocalDateTime.class)))
         .thenReturn(Optional.of(token));
 
