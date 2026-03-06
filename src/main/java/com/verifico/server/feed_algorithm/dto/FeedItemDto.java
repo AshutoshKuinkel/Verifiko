@@ -17,7 +17,5 @@ public class FeedItemDto {
     private String description;
     private String videoUrl;
     private List<String> tags;
-    private double bayesianScore;
-    private double categoryRankWeight;
     private double score;
 }
