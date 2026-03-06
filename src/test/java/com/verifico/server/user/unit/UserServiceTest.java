@@ -26,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.verifico.server.auth.mfa.MfaService;
 import com.verifico.server.auth.token.RefreshTokenRepository;
 import com.verifico.server.email.EmailService;
 import com.verifico.server.user.User;
@@ -55,6 +56,9 @@ class UserServiceTest {
 
   @Mock
   EmailService emailService;
+
+  @Mock
+  MfaService mfaService;
 
   @InjectMocks
   UserService userService;
