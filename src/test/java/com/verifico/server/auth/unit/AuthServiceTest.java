@@ -167,6 +167,7 @@ class AuthServiceTest {
     LoginRequest req = new LoginRequest();
     req.setUsername(username);
     req.setPassword(password);
+    req.setMfaCode("GOP321");
     return req;
   }
 
@@ -174,6 +175,7 @@ class AuthServiceTest {
     LoginRequest req = new LoginRequest();
     req.setEmail(email);
     req.setPassword(password);
+    req.setMfaCode("GOP321");
     return req;
   }
 
