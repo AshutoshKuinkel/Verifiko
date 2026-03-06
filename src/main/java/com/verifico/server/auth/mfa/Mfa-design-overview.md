@@ -112,3 +112,8 @@ v2 will replace stored challenges with a per-user shared secret:
 * No per-challenge database rows required
 
 `MfaService` remains the abstraction layer, allowing the underlying mechanism to change without affecting `AuthService` or `UserService`.
+
+Frontend behavior:
+Call /login with username/email + password, no mfaCode.
+If it gets 202 / “MFA code sent…”, show “enter code” UI and call the same /login again with username/email + password + mfaCode.
+On success, you get tokens as now.
