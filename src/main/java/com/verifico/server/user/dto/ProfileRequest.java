@@ -26,4 +26,7 @@ public class ProfileRequest {
   private String bio;
 
   private String avatarUrl;
+
+  @Size(min = 6, max = 6, message = "Please ensure your verification code is 6 characters long.")
+  private String mfaCode;
 }
