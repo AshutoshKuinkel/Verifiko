@@ -50,7 +50,7 @@ public class MfaService {
   public void validateMfaToken(User user, String submittedCode) {
     // check that token isn't expired
     Mfa token = mfaRepository
-        .findTopByUserIdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(user.getId(), LocalDateTime.now())
+        .findTopByUser_IdAndUsedFalseAndExpiresAtAfterOrderByIdDesc(user.getId(), LocalDateTime.now())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired code"));
 
     // check that token hasn't previously been used for this user & not expired,
