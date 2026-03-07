@@ -86,6 +86,14 @@ public class EmailService {
         sendHtmlEmail(email, "Password Reset Link", html);
     }
 
+    @Async
+    public void sendMfaGmailCodeEmailForv1(String mfaCode, String email) {
+        String html = loadTemplate("emails/sendMfaGmailCodeEmail4V1.html")
+                .replace("{{mfaCode}}", mfaCode);
+
+        sendHtmlEmail(email, "Your One Time Code", html);
+    }
+
     // helper template loader
     private String loadTemplate(String path) {
         try {

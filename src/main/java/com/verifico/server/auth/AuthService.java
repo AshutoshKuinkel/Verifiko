@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.verifico.server.auth.dto.LoginRequest;
 import com.verifico.server.auth.dto.RegisterRequest;
 import com.verifico.server.auth.jwt.JWTService;
+import com.verifico.server.auth.mfa.MfaService;
 import com.verifico.server.auth.token.RefreshToken;
 import com.verifico.server.auth.token.RefreshTokenService;
 import com.verifico.server.email.EmailService;
@@ -36,18 +37,20 @@ public class AuthService {
   private final JWTService jwtService;
   private final RefreshTokenService refreshTokenService;
   private final EmailService emailService;
+  private final MfaService mfaService;
   @Value("${JWT_EXPIRY}")
   private int accessTokenMins;
   @Value("${REFRESH_TOKEN_DAYS}")
   private long RefreshTokenDays;
 
   public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JWTService jwtService,
-      RefreshTokenService refreshTokenService, EmailService emailService) {
+      RefreshTokenService refreshTokenService, EmailService emailService, MfaService mfaService) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.refreshTokenService = refreshTokenService;
     this.emailService = emailService;
+    this.mfaService = mfaService;
   }
 
   @Transactional
@@ -115,6 +118,15 @@ public class AuthService {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
 
+    if (request.getMfaCode() == null || request.getMfaCode().isEmpty()) {
+      mfaService.mfaTokenGeneration(user);
+      throw new ResponseStatusException(
+          HttpStatus.ACCEPTED,
+          "MFA code sent to your email");
+    }
+
+    mfaService.validateMfaToken(user, request.getMfaCode());
+
     String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername());
 
     RefreshToken refreshToken = refreshTokenService.createToken(user);
@@ -164,8 +176,8 @@ public class AuthService {
   }
 
   public void logout(HttpServletRequest request) {
-    // clear refresh token + access token if user goes to logout endpoint {this is
-    // handeled in controller logic}
+    // clear refresh token + access token if user goes to logout endpoint (this is
+    // handeled in controller logic)
     // also revoke all db refresh tokens for that user...
 
     if (request.getCookies() == null)

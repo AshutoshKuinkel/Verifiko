@@ -26,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.verifico.server.auth.mfa.MfaService;
 import com.verifico.server.auth.token.RefreshTokenRepository;
 import com.verifico.server.email.EmailService;
 import com.verifico.server.user.User;
@@ -55,6 +56,9 @@ class UserServiceTest {
 
   @Mock
   EmailService emailService;
+
+  @Mock
+  MfaService mfaService;
 
   @InjectMocks
   UserService userService;
@@ -182,6 +186,7 @@ class UserServiceTest {
 
     ProfileRequest request = new ProfileRequest();
     request.setEmail("newemail@gmail.com");
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updateMyProfile(request));
@@ -204,6 +209,7 @@ class UserServiceTest {
 
     ProfileRequest request = new ProfileRequest();
     request.setUsername("NewUsername");
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updateMyProfile(request));
@@ -226,6 +232,7 @@ class UserServiceTest {
 
     ProfileRequest request = new ProfileRequest();
     request.setAvatarUrl("GIGANIGGA");
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updateMyProfile(request));
@@ -249,6 +256,7 @@ class UserServiceTest {
     ProfileRequest request = new ProfileRequest();
     String longurl = "https://" + "a".repeat(2050);
     request.setAvatarUrl(longurl);
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updateMyProfile(request));
@@ -272,6 +280,7 @@ class UserServiceTest {
     ProfileRequest request = new ProfileRequest();
     request.setFirstName("Jonnhy");
     request.setEmail("jonnhydoe2@gmail.com");
+    request.setMfaCode("GOP321");
 
     UserResponse response = userService.updateMyProfile(request);
 
@@ -295,6 +304,7 @@ class UserServiceTest {
 
     ProfileRequest request = new ProfileRequest();
     request.setEmail("johndoe2@gmail.com");
+    request.setMfaCode("GOP321");
 
     userService.updateMyProfile(request);
 
@@ -316,6 +326,7 @@ class UserServiceTest {
 
     ProfileRequest request = new ProfileRequest();
     request.setUsername("JohnDoe123");
+    request.setMfaCode("GOP321");
 
     userService.updateMyProfile(request);
 
@@ -336,6 +347,7 @@ class UserServiceTest {
 
     ProfileRequest request = new ProfileRequest();
     request.setBio("      ");
+    request.setMfaCode("GOP321");
 
     UserResponse response = userService.updateMyProfile(request);
 
@@ -357,6 +369,7 @@ class UserServiceTest {
     ProfileRequest request = new ProfileRequest();
     request.setEmail("  JOHHNNDOEEE22@GMAIL.COM  ");
     request.setUsername("  jooohnDoe23  ");
+    request.setMfaCode("GOP321");
 
     UserResponse response = userService.updateMyProfile(request);
 
@@ -425,6 +438,7 @@ class UserServiceTest {
     request.setOldPassword("bomboclaat");
     request.setNewPassword("newpass");
     request.setConfirmNewPassword("newpass");
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updatePassword(request));
@@ -452,6 +466,7 @@ class UserServiceTest {
     request.setOldPassword("hashedPass");
     request.setNewPassword("hashedPass");
     request.setConfirmNewPassword("hashedPass");
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updatePassword(request));
@@ -479,6 +494,7 @@ class UserServiceTest {
     request.setOldPassword("hashedPass");
     request.setNewPassword("password123");
     request.setConfirmNewPassword("paaaaaasssss");
+    request.setMfaCode("GOP321");
 
     ResponseStatusException ex = assertThrows(ResponseStatusException.class,
         () -> userService.updatePassword(request));
@@ -509,6 +525,7 @@ class UserServiceTest {
     request.setOldPassword("hashedPass");
     request.setNewPassword("password123");
     request.setConfirmNewPassword("password123");
+    request.setMfaCode("GOP321");
 
     userService.updatePassword(request);
 
