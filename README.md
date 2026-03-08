@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Verifiko</h1>
+  <img src="assets/2026-03-08-img.png" alt="Verifiko" width="350"/>
 
 [![Test Coverage](https://img.shields.io/sonar/coverage/AshutoshKuinkel_Verifico-Server/main?server=https%3A%2F%2Fsonarcloud.io&label=Test%20Coverage)](https://sonarcloud.io/organizations/verifiko/projects)
 [![Maintainability Rating](https://img.shields.io/sonar/sqale_rating/AshutoshKuinkel_Verifico-Server/main?server=https%3A%2F%2Fsonarcloud.io&label=SQALE%20Rating)](https://sonarcloud.io/organizations/verifiko/projects)
@@ -7,4 +7,5 @@
 ![CI](https://img.shields.io/github/actions/workflow/status/AshutoshKuinkel/Verifiko/spring-boot-ci.yml?branch=main&label=Build)
 
 #
+
 </div>
