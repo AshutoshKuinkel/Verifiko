@@ -17,7 +17,7 @@ public class MfaCodeCleanup {
   private final MfaRepository mfaRepository;
 
   @Transactional
-  @Scheduled(cron = "0 * * * *")
+  @Scheduled(cron = "0 0 */1 * * *")
   public void cleanupPastMfaTokens() {
     mfaRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
   }

@@ -22,7 +22,7 @@ public class ResetTokenCleanup {
   private final ResetTokenRepository resetTokenRepository;
 
   @Transactional
-  @Scheduled(cron = "0 * * * *")
+  @Scheduled(cron = "0 0 */1 * * *")
   public void clearExpiredResetTokens() {
     resetTokenRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
   }

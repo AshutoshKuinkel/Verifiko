@@ -39,21 +39,23 @@ public class SecurityConfig {
     // methods
     http
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-        .anonymous(anonymous -> anonymous.disable()) // disabling any anonymous auth spring seucirty sets before jwt,
-                                                     // may break OAUTH, watch this one
-                                                     // filter runs
+        .anonymous(anonymous -> anonymous.disable()) // disabling any anonymous auth
+        // spring seucirty sets before jwt,
+        // may break OAUTH, watch this one
+        // filter runs
         .authorizeHttpRequests(
             requests -> requests
 
                 // swagger endpoints
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
+                // oauth2 endpoints
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+
                 // auth endpoints
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout",
                     "/api/v1/payments/webhook/stripe")
                 .permitAll()
-
-                .requestMatchers("/login/oauth2/code/google").permitAll()
 
                 // feed endpoints (allowing access before authentication/authorisation)
                 .requestMatchers(HttpMethod.GET, "/", "/api/posts", "/api/posts/{id}/comments", "/api/users/{id}")
@@ -69,10 +71,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/api/users/me").authenticated()
                 .anyRequest().authenticated())
 
-        .oauth2Login(oauth -> {
-          oauth.loginPage("/api/auth/login");
-          oauth.defaultSuccessUrl("/");
-        });
+        .oauth2Login(oauth -> oauth.defaultSuccessUrl("/"));
     return http.build();
   }
 
