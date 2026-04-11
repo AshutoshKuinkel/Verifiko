@@ -10,6 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class UpdatePasswordRequest {
+
+  @Size(min = 6, max = 6, message = "Please ensure your verification code is 6 characters long.")
+  private String mfaCode;
+
   @NotBlank(message = "Please enter old password")
   private String oldPassword;
 

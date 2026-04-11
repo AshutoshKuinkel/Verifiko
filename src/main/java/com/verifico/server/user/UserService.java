@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.verifico.server.auth.mfa.MfaService;
 import com.verifico.server.auth.token.RefreshTokenRepository;
 import com.verifico.server.email.EmailService;
 import com.verifico.server.user.dto.ProfileRequest;
@@ -28,6 +29,8 @@ public class UserService {
   private final RefreshTokenRepository refreshTokenRepository;
 
   private final EmailService emailService;
+
+  private final MfaService mfaService;
 
   public UserResponse meEndpoint() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -64,6 +67,15 @@ public class UserService {
     User user = userRepository.findByUsername(username)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "User couldn't be found"));
+
+    if (request.getMfaCode() == null || request.getMfaCode().isEmpty()) {
+      mfaService.mfaTokenGeneration(user);
+      throw new ResponseStatusException(
+          HttpStatus.ACCEPTED,
+          "MFA code sent to your email");
+    }
+
+    mfaService.validateMfaToken(user, request.getMfaCode());
 
     // update fields if entered
     if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) && !request.getEmail().isBlank()) {
@@ -117,6 +129,15 @@ public class UserService {
 
     User user = userRepository.findByUsername(username).orElseThrow(
         () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "A user with that associated id couldn't be found"));
+
+    if (request.getMfaCode() == null || request.getMfaCode().isEmpty()) {
+      mfaService.mfaTokenGeneration(user);
+      throw new ResponseStatusException(
+          HttpStatus.ACCEPTED,
+          "MFA code sent to your email");
+    }
+
+    mfaService.validateMfaToken(user, request.getMfaCode());
 
     // check old pass matches user password
     if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {

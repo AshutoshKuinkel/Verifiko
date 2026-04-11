@@ -1,0 +1,136 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#10b77f",
+              "background-light": "#f6f8f7",
+              "background-dark": "#10221c",
+            },
+            fontFamily: {
+              display: ["Inter"],
+              mono: ["JetBrains Mono"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+    <title>Verifiko - 2FA Verification Code</title>
+  </head>
+  <body
+    class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center p-4"
+  >
+    <!-- Main Email Container -->
+    <div
+      class="max-w-[600px] w-full bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden border border-primary/10"
+    >
+      <header class="pt-10 pb-6 text-center">
+        <span
+          class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white"
+        >
+          Verifiko
+        </span>
+      </header>
+      <!-- Main Content -->
+      <main class="px-8 pb-12 text-center">
+        <!-- Heading -->
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+          Verify Your Login
+        </h1>
+        <p class="text-slate-600 dark:text-slate-400 text-base mb-8">
+          To complete your action, please enter the following verification code
+          on your screen.
+        </p>
+        <!-- Verification Code Box -->
+        <div
+          class="bg-primary/5 dark:bg-primary/10 rounded-xl p-8 mb-4 border border-primary/20 inline-block w-full"
+        >
+          <div
+            class="font-mono text-4xl tracking-[0.5em] font-bold text-slate-900 dark:text-white uppercase select-all"
+          >
+            V7K9X2
+          </div>
+        </div>
+        <!-- Action Link -->
+        <div class="mb-8">
+          <button
+            class="text-primary font-medium hover:underline flex items-center justify-center gap-1 mx-auto"
+          >
+            <span class="material-symbols-outlined text-sm">content_copy</span>
+            Copy Code
+          </button>
+        </div>
+        <!-- Instruction Note -->
+        <div
+          class="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 py-4 border-t border-slate-100 dark:border-slate-800"
+        >
+          <span class="material-symbols-outlined text-base">schedule</span>
+          <p>
+            This code will expire in
+            <span class="font-semibold text-slate-700 dark:text-slate-200"
+              >10 minutes</span
+            >.
+          </p>
+        </div>
+        <!-- Security Warning -->
+        <p
+          class="mt-8 text-xs text-slate-400 dark:text-slate-500 leading-relaxed px-4"
+        >
+          If you didn't request this code, your account might be at risk. Please
+          contact our support team immediately or secure your account.
+        </p>
+      </main>
+      <!-- Footer -->
+      <footer class="bg-slate-50 dark:bg-slate-800/50 px-8 py-8 text-center">
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          Sent by Verifiko team. Sydney NSW, Australia.
+        </p>
+        <div class="flex justify-center gap-6 text-xs font-medium text-primary">
+          <a class="hover:underline" href="#">Support Center</a>
+          <a class="hover:underline" href="#">Privacy Policy</a>
+          <a class="hover:underline" href="#">Terms of Service</a>
+        </div>
+        <div class="mt-6 flex justify-center gap-4 text-slate-400">
+          <span
+            class="material-symbols-outlined text-lg cursor-pointer hover:text-primary"
+            >language</span
+          >
+          <span
+            class="material-symbols-outlined text-lg cursor-pointer hover:text-primary"
+            >hub</span
+          >
+          <span
+            class="material-symbols-outlined text-lg cursor-pointer hover:text-primary"
+            >mail</span
+          >
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

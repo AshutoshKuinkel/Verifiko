@@ -18,4 +18,7 @@ public class LoginRequest {
 
   @Size(min = 8, message = "Password must be at least 8 characters")
   private String password;
+
+  @Size(min = 6, max = 6, message = "Please ensure your verification code is 6 characters long.")
+  private String mfaCode;
 }

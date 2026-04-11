@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.AllArgsConstructor;
 
@@ -20,7 +21,8 @@ public class ResetTokenCleanup {
 
   private final ResetTokenRepository resetTokenRepository;
 
-  @Scheduled(fixedRate = 3_600_000)
+  @Transactional
+  @Scheduled(cron = "0 * * * *")
   public void clearExpiredResetTokens() {
     resetTokenRepository.deleteAllByExpiresAtBefore(LocalDateTime.now());
   }
