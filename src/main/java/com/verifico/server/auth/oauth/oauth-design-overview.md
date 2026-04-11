@@ -37,6 +37,15 @@ After consent of user, Verifiko will just gain limited access to the user data i
 
 ![alt text](./asset/oauth-flowchart.png)
 
+- OAuth callback
+    - OAuth2AuthenticationSuccessHandler
+        - OAuthUserFactory (normalize provider data → your User)
+        - account linking check
+        - create/fetch your User entity
+        - trigger MFA challenge (don't issue tokens yet)
+        - MFA verified
+        - issue YOUR access + refresh tokens
+
 ### HTTP Requests/Responses:
 
 - Note these are simply from _Reference ii_ and serve as examples. They may change for my implmentation. May change considering article is from 2017.</br>
