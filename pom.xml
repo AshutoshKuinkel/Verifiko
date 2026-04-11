@@ -30,6 +30,8 @@
     <properties>
         <java.version>17</java.version>
         <jackson.version>3.1.0</jackson.version>
+        <tomcat.version>11.0.20</tomcat.version>
+        <spring-security.version>7.0.4</spring-security.version>
     </properties>
 
     <dependencyManagement>
@@ -186,7 +188,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-            <version>4.0.1</version>
             <scope>compile</scope>
         </dependency>
 
