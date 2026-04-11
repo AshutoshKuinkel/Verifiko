@@ -23,6 +23,7 @@ import com.verifico.server.auth.AuthService;
 import com.verifico.server.auth.dto.LoginRequest;
 import com.verifico.server.auth.dto.RegisterRequest;
 import com.verifico.server.auth.jwt.JWTService;
+import com.verifico.server.auth.mfa.MfaService;
 import com.verifico.server.auth.token.RefreshToken;
 import com.verifico.server.auth.token.RefreshTokenService;
 import com.verifico.server.email.EmailService;
@@ -44,6 +45,8 @@ class AuthServiceTest {
   RefreshTokenService refreshTokenService;
   @Mock
   EmailService emailService;
+  @Mock
+  MfaService mfaService;
 
   @InjectMocks
   AuthService authService;
@@ -164,6 +167,7 @@ class AuthServiceTest {
     LoginRequest req = new LoginRequest();
     req.setUsername(username);
     req.setPassword(password);
+    req.setMfaCode("GOP321");
     return req;
   }
 
@@ -171,6 +175,7 @@ class AuthServiceTest {
     LoginRequest req = new LoginRequest();
     req.setEmail(email);
     req.setPassword(password);
+    req.setMfaCode("GOP321");
     return req;
   }
 
