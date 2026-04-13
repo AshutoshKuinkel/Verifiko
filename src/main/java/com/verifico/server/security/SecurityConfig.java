@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import com.verifico.server.auth.jwt.JWTAuthFilter;
+import com.verifico.server.auth.oauth.OAuthSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -71,7 +72,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/api/users/me").authenticated()
                 .anyRequest().authenticated())
 
-        .oauth2Login(oauth -> oauth.defaultSuccessUrl("/"));
+        .oauth2Login(oauth -> oauth.successHandler(OAuthSuccessHandler));
     return http.build();
   }
 
